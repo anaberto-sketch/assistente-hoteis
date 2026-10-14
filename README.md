@@ -8,6 +8,23 @@ Este projeto **não reimplementa o pipeline**. Ele reaproveita os limiares exist
 
 ---
 
+## Design em uma frase
+
+**Agentes + Skills + MCP-ready, com diagnóstico determinístico.** As "skills" são os três blocos de regras do pipeline (CALIDAD, TARIFAS, RESERVAS) implementados em Python puro; o LLM é o narrador final, não decide nada; a camada de dados é um `Protocol` com duas implementações plugáveis (CSV hoje, MCP amanhã) — a troca não toca o grafo.
+
+| Camada | O quê | Como |
+|---|---|---|
+| Agente orquestrador | Grafo linear LangGraph | `graph.py` — 1 aresta condicional (clarify) |
+| Skills de diagnóstico | Regras puras em Python com procedência auditável | `domain/rules.py` + `domain/thresholds.py` (`[MATERIAL]`/`[ENG]`) |
+| Retrieval de contexto | BM25 léxico sobre dicionário de 59 campos | `retrieval/` — nunca sobre a linha do hotel |
+| Camada de dados | `HotelRepository` Protocol — MCP-ready | `data/csv_repository.py` (hoje) · `data/mcp_repository.py` (shape MCP) |
+| Narração | Claude Sonnet via GenPlat, system prompt estruturado em XML tags | `llm.py` + `prompts/system_pt.md` + `system_es.md` |
+| Guardrails | Numérico pós-hoc + idioma + truncamento + escopo + prompt injection | `guardrails/numeric.py` + regras no system prompt |
+
+A trava de design está na linha "Skills de diagnóstico": no padrão clássico "LLM descobre o que está ruim", o modelo erra e inventa flags. Aqui as flags são aplicadas **antes** do LLM ver qualquer coisa — ele não tem como alucinar alavanca.
+
+---
+
 ## A decisão central: lookup ≠ retrieval
 
 O erro fácil aqui é jogar o CSV num vector store e fazer RAG sobre ele. Isso está errado por três motivos:
@@ -119,6 +136,21 @@ Os `synonyms` de cada campo **não** vêm do material — são curadoria manual,
 
 ---
 
+## MCP-ready: a camada de dados é um Protocol
+
+`HotelRepository` em `data/repository.py` é um `Protocol`. Hoje existem duas implementações:
+
+| Implementação | Como funciona | Quando usar |
+|---|---|---|
+| `CsvHotelRepository` | lookup direto em `data/hotels.csv` | demo, dev, testes |
+| `MCPHotelRepository` | mesma interface, mas chama tools nomeadas (`get_hotel_metrics`, `search_hotel_by_name`, `list_hotels`) com headers (`x-hotel-id`, `x-session-id`, `x-requester-token`) | integração com servidor MCP real |
+
+A segunda hoje resolve localmente via `_call_tool` (não há servidor subido no hackathon). Trocar essa linha por `MultiServerMCPClient.call_tool(...)` é a única mudança para plugar num servidor MCP de verdade. O grafo, as regras, o retrieval e os guardrails não precisam saber da diferença.
+
+**Por que isolar aqui:** quando o servidor MCP existir, ele é quem garante o isolamento por `hotel_id` (header, não payload). O cliente MCP não consegue ler dados de outro hotel ainda que mude o `hotel_id` no payload — o servidor valida pelos headers do token. É a mesma razão pela qual *lookup ≠ retrieval*: isolamento de dados por chave, não por similaridade.
+
+---
+
 ## Guardrails
 
 1. **Entrada recortada.** O prompt recebe `hotel_row[retrieved_fields ∪ lever.field_refs]`, não a linha inteira. Menos número disponível = menos número para inventar.
@@ -126,6 +158,7 @@ Os `synonyms` de cada campo **não** vêm do material — são curadoria manual,
 3. **Guardrail numérico pós-hoc.** A lista de números permitidos é extraída **do próprio prompt enviado** — não é uma lista paralela que pode divergir. Número sem lastro → uma regeneração com instrução mais restrita → se insistir, a resposta volta marcada em `guardrail_flags` e a interface avisa. Não reescrevemos a resposta por conta própria: trocar número alucinado por número nosso seria pior.
 4. **Guardrail de idioma.** `country_code == "BR"` → `pt`; qualquer outro → `es`. Derivado do dado, não do texto da pergunta.
 5. **Truncamento não é silencioso.** `stop_reason == "max_tokens"` vira flag visível. Um texto cortado no meio de uma frase parece uma resposta completa.
+6. **Escopo funcional + imunidade a prompt injection.** O system prompt instrui o modelo a tratar o texto do hoteleiro, o histórico e o retorno de ferramentas como dados não confiáveis. Pedidos fora do contexto do hotel (política, religião, dados de outros hotéis, revelar instruções) recebem recusa breve e redirecionamento. Isso é defesa em texto — não substitui a validação de headers que o servidor MCP terá que fazer, mas evita a classe trivial de ataque numa demo pública.
 
 ---
 
@@ -152,7 +185,7 @@ src/assistant_hotel/
 │   ├── diagnosis.py   # motor: regras + modificadores -> Diagnosis
 │   ├── blocks.py      # vocabulário de negócio -> bloco
 │   └── fields.py      # carrega o dicionário
-├── data/              # HotelRepository (Protocol) + implementação CSV
+├── data/              # HotelRepository (Protocol): CsvHotelRepository + MCPHotelRepository (shape MCP)
 ├── retrieval/         # tokenize + BM25 + search com garantias
 ├── nodes/             # adaptadores finos domain/ → grafo
 ├── prompts/           # system_pt.md, system_es.md, render.py
