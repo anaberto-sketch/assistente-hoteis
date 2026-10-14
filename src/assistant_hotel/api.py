@@ -50,6 +50,13 @@ class ChatRequest(BaseModel):
         default_factory=list,
         description="Turnos anteriores no formato {'role', 'content'}.",
     )
+    session_id: str | None = Field(
+        default=None,
+        description=(
+            "Agrupa turnos da mesma conversa no Langfuse. Opcional: sem ele, "
+            "cada request vira um trace proprio."
+        ),
+    )
 
 
 class LeverOut(BaseModel):
@@ -111,7 +118,12 @@ def chat(request: ChatRequest) -> ChatResponse:
         state["hotel_id"] = request.hotel_id
 
     try:
-        result = default_graph().invoke(state)
+        result = default_graph().invoke(
+            state,
+            {"metadata": {"session_id": request.session_id}}
+            if request.session_id
+            else None,
+        )
     except FileNotFoundError as exc:
         # Token do Tompero ausente: e indisponibilidade, nao erro do cliente.
         raise HTTPException(status_code=503, detail=str(exc)) from exc

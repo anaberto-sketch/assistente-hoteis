@@ -41,6 +41,7 @@ from .nodes.retrieve import make_retrieve_node
 from .nodes.validate import make_validate_node
 from .retrieval.index import FieldIndex, build_index
 from .state import AssistantState
+from .tracing import TracedGraph, TracedLLM
 
 
 @dataclass(frozen=True)
@@ -53,14 +54,18 @@ class Deps:
 def build_graph(deps: Deps) -> Any:
     graph = StateGraph(AssistantState)
 
-    graph.add_node("resolve_hotel", make_resolve_node(deps.repository))
-    graph.add_node("clarify", make_clarify_node(deps.repository))
-    graph.add_node("fetch_row", make_fetch_node(deps.repository))
-    graph.add_node("diagnose", diagnose_row)
-    graph.add_node("retrieve_docs", make_retrieve_node(deps.index))
-    graph.add_node("assemble", assemble_prompt)
-    graph.add_node("generate", make_generate_node(deps.llm))
-    graph.add_node("validate", make_validate_node(deps.llm))
+    nos = {
+        "resolve_hotel": make_resolve_node(deps.repository),
+        "clarify": make_clarify_node(deps.repository),
+        "fetch_row": make_fetch_node(deps.repository),
+        "diagnose": diagnose_row,
+        "retrieve_docs": make_retrieve_node(deps.index),
+        "assemble": assemble_prompt,
+        "generate": make_generate_node(deps.llm),
+        "validate": make_validate_node(deps.llm),
+    }
+    for nome, no in nos.items():
+        graph.add_node(nome, no)
 
     graph.add_edge(START, "resolve_hotel")
     graph.add_conditional_edges(
@@ -74,14 +79,17 @@ def build_graph(deps: Deps) -> Any:
     graph.add_edge("generate", "validate")
     graph.add_edge("validate", END)
 
-    return graph.compile()
+    return TracedGraph(graph.compile())
 
 
 def build_deps() -> Deps:
+    # O LLM real vai envolvido: e aqui que a span de geracao passa a existir,
+    # com modelo e tokens. Sem credencial do Langfuse, `TracedLLM` e
+    # transparente.
     return Deps(
         repository=CsvHotelRepository(),
         index=build_index(),
-        llm=GenPlatLLM(),
+        llm=TracedLLM(GenPlatLLM()),
     )
 
 

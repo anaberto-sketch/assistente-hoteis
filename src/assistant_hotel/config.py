@@ -33,7 +33,7 @@ class Settings:
                 "ANTHROPIC_BASE_URL",
                 "https://generative-ai-platform-development.ifoodcorp.com.br/api/v2",
             ),
-            model=os.environ.get("ASSISTANT_HOTEL_MODEL", "claude-sonnet-5-bedrock"),
+            model=os.environ.get("ASSISTANT_HOTEL_MODEL", "gpt-4.1"),
             token_path=Path(
                 os.environ.get("ASSISTANT_HOTEL_TOKEN_PATH", DEFAULT_TOKEN_PATH)
             ),

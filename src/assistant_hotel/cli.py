@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import argparse
 import sys
+import uuid
 from typing import Any, Sequence
 
 from .config import MissingTokenError, read_requester_token
 from .data.repository import HotelRepository
 from .graph import Deps, build_deps, build_graph
 from .state import AssistantState
+from .tracing import flush
 
 HELP = """\
 Comandos:
@@ -66,15 +68,30 @@ def _ask(
     question: str,
     hotel_id: str | None,
     history: list[dict[str, Any]],
+    session_id: str | None = None,
 ) -> dict[str, Any]:
     state: AssistantState = {"question": question, "history": history}
     if hotel_id:
         # Turno anterior ja resolvido: reaproveita para "e o preco?" funcionar.
         state["hotel_id"] = hotel_id
-    return graph.invoke(state)
+    # A sessao vai pelo config do LangGraph, nao pelo estado: e identidade de
+    # observabilidade, nao do dominio. Agrupa os turnos do REPL num trace so.
+    config = {"metadata": {"session_id": session_id}} if session_id else None
+    if config is None:
+        return graph.invoke(state)
+    return graph.invoke(state, config)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    try:
+        return _run(argv)
+    finally:
+        # O processo do CLI morre logo depois da resposta, antes do flush
+        # periodico do Langfuse: sem isto o trace fica no buffer e se perde.
+        flush()
+
+
+def _run(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="assistant-hotel",
         description="Chat de performance hoteleira sobre o pipeline de recomendações.",
@@ -98,6 +115,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     graph = build_graph(deps)
     history: list[dict[str, Any]] = []
     hotel_id: str | None = None
+    # Um id por processo: os turnos do REPL ficam agrupados numa sessao so.
+    session_id = uuid.uuid4().hex
 
     # A credencial e preguicosa: sem ela o CLI ainda lista hoteis, resolve o
     # hotel e roda o diagnostico. Avisamos agora para a degradacao nao
@@ -119,7 +138,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 1
 
     if args.ask:
-        result = _ask(graph, args.ask, hotel_id, history)
+        result = _ask(graph, args.ask, hotel_id, history, session_id)
         _print_result(result, args.context)
         return 0
 
@@ -161,7 +180,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"Hotel: {row.get('hotel_name')} ({hotel_id}) — histórico reiniciado.")
             continue
 
-        result = _ask(graph, line, hotel_id, history)
+        result = _ask(graph, line, hotel_id, history, session_id)
         _print_result(result, args.context)
 
         # Só memoriza o hotel quando a resolução deu certo: um turno de

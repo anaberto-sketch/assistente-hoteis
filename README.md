@@ -93,7 +93,22 @@ curl -X POST http://127.0.0.1:8000/chat \
 uv run pytest
 ```
 
-114 testes, nenhum toca a rede: o grafo é testado com um `FakeLLM` injetado. O marcador `integration` está registrado no `pyproject.toml` e excluído por padrão, mas **nenhum teste o usa hoje** — os testes contra o GenPlat real são manuais (`python -m assistant_hotel.llm --ping` e as execuções do CLI).
+134 testes, nenhum toca a rede: o grafo é testado com um `FakeLLM` injetado. O marcador `integration` está registrado no `pyproject.toml` e excluído por padrão, mas **nenhum teste o usa hoje** — os testes contra o GenPlat real são manuais (`python -m assistant_hotel.llm --ping` e as execuções do CLI).
+
+**Avaliação.** Os testes provam que o grafo funciona; eles não medem se a resposta presta. Isso é o que `evals/` faz — roda o grafo real contra o GenPlat e julga o texto com LLM-as-a-judge.
+
+```bash
+uv sync --extra eval
+uv run python evals/build_cases.py           # perguntas_eval -> casos do eval
+uv run python evals/run_eval.py --selftest   # o juiz discrimina?
+uv run python evals/run_eval.py --limit 3    # o lote (66 casos: comece pequeno)
+uv run python evals/dashboard.py             # http://127.0.0.1:8765
+```
+
+Os casos saem de `data/perguntas_eval.csv` (33 perguntas em PT e ES, cada uma com a rubrica de como o chat deveria responder), cruzadas com hotéis reais — sem `hotel_id` o grafo cai em `clarify` e o caso reprova sem nem chamar o LLM.
+
+Fica fora do `testpaths` do pytest de propósito: `uv run pytest` nunca chama a rede. Ver [evals/README.md](evals/README.md).
+
 **Configuração** (tudo por env var, nada hardcoded):
 
 | Variável | Default |
@@ -103,6 +118,33 @@ uv run pytest
 | `ASSISTANT_HOTEL_TOKEN_PATH` | `~/.config/tompero/requester_token` |
 | `ASSISTANT_HOTEL_DATA_DIR` | `data/` |
 | `ASSISTANT_HOTEL_MAX_TOKENS` | `4000` |
+
+---
+
+## Observabilidade (Langfuse)
+
+Cada request do agente vira um trace: a pergunta, a resposta, o hotel, as alavancas e as flags de guardrail. Dentro dele, uma span por nó do grafo e a span `generation` com modelo e tokens.
+
+**É opcional e inerte.** Sem `LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY` no ambiente, nada é construído e nada é impresso — o resultado do grafo é idêntico. As credenciais vêm do ambiente (o SDK lê `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL`/`LANGFUSE_HOST`); nenhum `.env` é lido pelo código:
+
+```bash
+uv run --env-file .env python -m assistant_hotel.cli --hotel 345798 --ask "estou caro?"
+```
+
+### O custo: quem calcula é o Langfuse
+
+Não mandamos custo nenhum. Mandamos `model` + `usage_details`, e o Langfuse **infere** o custo casando o nome do modelo com as definições que ele mesmo mantém — assim um preço que mude lá não exige deploy nosso.
+
+Só que `claude-sonnet-5-bedrock` é um nome do GenPlat, e **todos** os padrões de Claude na tabela do Langfuse são ancorados (`^...$`) — nenhum casa. Sem definição própria, a span sai com tokens e **sem custo**. Para resolver, uma vez só:
+
+```bash
+uv run --env-file .env python scripts/ensure_langfuse_model.py --dry-run   # mostra o que faria
+uv run --env-file .env python scripts/ensure_langfuse_model.py             # cria
+```
+
+O script é idempotente (não faz nada se já houver um modelo que reconheça o nome) e registra o preço publicado do Sonnet 5 — **$2/MTok de entrada e $10/MTok de saída**, verificado em [claude.com/pricing](https://claude.com/pricing) em 14/10/2026. O cálculo do custo acontece na **ingestão**: defini-lo agora não reescreve spans já enviadas, só as novas.
+
+Se o preço mudar, ajuste no Langfuse (Settings → Models) ou rode o script com `--input-price`/`--output-price`. Não colocamos preço no nosso código de propósito: um número nosso envelheceria sem ninguém notar.
 
 ---
 
@@ -179,7 +221,8 @@ A segunda hoje resolve localmente via `_call_tool` (não há servidor subido no 
 ```
 src/assistant_hotel/
 ├── config.py          # Settings + leitura do token
-├── llm.py             # ÚNICO módulo que fala com a rede
+├── llm.py             # cliente do GenPlat (um dos dois pontos de rede)
+├── tracing.py         # Langfuse: traces das requests do agente (o outro)
 ├── state.py           # TypedDicts do grafo
 ├── graph.py           # topologia + injeção de dependências
 ├── domain/            # Python puro: sem I/O, sem LLM
@@ -193,8 +236,21 @@ src/assistant_hotel/
 ├── nodes/             # adaptadores finos domain/ → grafo
 ├── prompts/           # system_pt.md, system_es.md, render.py
 ├── guardrails/        # numeric.py
+├── eval/              # checagens deterministicas, leitura do resultado e montagem dos casos
 ├── cli.py
 └── api.py
+
+evals/                 # harness de avaliacao: roda o grafo real e julga com DeepEval
+├── build_cases.py     # data/perguntas_eval.csv -> cases.csv (rotacao de hoteis por pais)
+├── run_eval.py        # CSV -> grafo -> juiz -> relatorio
+├── dashboard.py       # servidor local: le results/ e dispara lotes
+├── dashboard.html     # a interface
+├── cases.csv          # os casos do eval (gerado pelo build_cases; versionado)
+├── cases_exemplo.csv  # os 6 casos autorais, que exercitam regras especificas
+└── results/           # saida (fora do git)
+
+scripts/               # tarefas de operacao, rodadas a mao
+└── ensure_langfuse_model.py  # cria no Langfuse o modelo que faz o custo aparecer
 ```
 
-**Fronteiras:** `domain/` é puro e é o coração testável. `nodes/` são adaptadores finos. `retrieval/` conhece só o dicionário, **nunca** a linha do hotel. `llm.py` é o único ponto de rede.
+**Fronteiras:** `domain/` é puro e é o coração testável. `nodes/` são adaptadores finos. `retrieval/` conhece só o dicionário, **nunca** a linha do hotel. Os dois únicos pontos de rede são `llm.py` (GenPlat) e `tracing.py` (Langfuse) — e o segundo é inerte sem credencial.
