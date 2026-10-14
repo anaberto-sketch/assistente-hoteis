@@ -9,8 +9,10 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from .data.csv_repository import CsvHotelRepository
 from .graph import default_graph
 from .state import AssistantState
 
@@ -19,6 +21,23 @@ app = FastAPI(
     version="0.1.0",
     description="Chat sobre a performance de um hotel, sobre o pipeline de recomendações.",
 )
+
+# CORS: o frontend (dev server do Vite) roda em outra porta. Sem isto o
+# navegador bloqueia as chamadas. Em producao, restringir allow_origins.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Repositorio compartilhado para o endpoint de listagem. O /chat usa o grafo
+# (que tem seu proprio repositorio); este e so para expor a lista de hoteis.
+_repository = CsvHotelRepository()
 
 
 class ChatRequest(BaseModel):
@@ -49,6 +68,13 @@ class LeverOut(BaseModel):
     caveats: list[str]
 
 
+class HotelOut(BaseModel):
+    hotel_id: str
+    hotel_name: str | None = None
+    country_code: str | None = None
+    destiny: str | None = None
+
+
 class ChatResponse(BaseModel):
     answer: str
     hotel_id: str | None = None
@@ -63,6 +89,23 @@ class ChatResponse(BaseModel):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/hotels", response_model=list[HotelOut])
+def hotels() -> list[HotelOut]:
+    """Lista os hoteis da base, para o seletor do frontend."""
+    out: list[HotelOut] = []
+    for hotel_id in _repository.all_ids():
+        row = _repository.get(hotel_id) or {}
+        out.append(
+            HotelOut(
+                hotel_id=hotel_id,
+                hotel_name=row.get("hotel_name"),
+                country_code=row.get("country_code"),
+                destiny=row.get("destiny"),
+            )
+        )
+    return out
 
 
 @app.post("/chat", response_model=ChatResponse)
