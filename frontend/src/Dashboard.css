@@ -1,0 +1,325 @@
+/* Static dashboard styles. Palette scoped to the dashboard component. */
+.dashboard {
+  --db-bg: #f7f8fa;
+  --db-card: #ffffff;
+  --db-border: #e2e8f0;
+  --db-ink: #1a202c;
+  --db-muted: #64748b;
+  --db-prop: #7c3aed;
+  --db-comp: #0d9488;
+  --db-neg: #dc2626;
+
+  min-height: 100vh;
+  width: 100%;
+  background: var(--db-bg);
+  color: var(--db-ink);
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+    Arial, sans-serif;
+}
+
+/* ---- 1. Header -------------------------------------------------------- */
+.db-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--db-border);
+  padding: 14px 24px;
+}
+.db-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.db-brand-icon {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #f1ebfe;
+  color: var(--db-prop);
+}
+.db-brand-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.db-brand-name {
+  font-weight: 700;
+  font-size: 15px;
+}
+.db-nav {
+  display: flex;
+  gap: 20px;
+}
+.db-nav-link {
+  font-size: 14px;
+  color: var(--db-muted);
+  padding-bottom: 2px;
+}
+.db-nav-link.active {
+  color: var(--db-ink);
+  font-weight: 600;
+  border-bottom: 2px solid var(--db-prop);
+}
+.db-hotel {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+.db-hotel-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.db-hotel-id {
+  font-size: 12px;
+  color: var(--db-muted);
+}
+.db-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.db-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--db-prop);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+.db-user-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ---- 2. Filters bar --------------------------------------------------- */
+.db-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #eef1f5;
+  border-bottom: 1px solid var(--db-border);
+  padding: 10px 24px;
+}
+.db-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid var(--db-border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: var(--db-ink);
+}
+.db-filter svg {
+  width: 15px;
+  height: 15px;
+  color: var(--db-muted);
+}
+.db-download {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--db-prop);
+  font-weight: 600;
+}
+
+/* ---- Container -------------------------------------------------------- */
+.db-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.db-updated {
+  text-align: right;
+  font-size: 12px;
+  color: var(--db-muted);
+  margin-bottom: -8px;
+}
+
+/* ---- Metric cards ----------------------------------------------------- */
+.db-cards {
+  display: flex;
+  gap: 16px;
+}
+.metric-card {
+  flex: 1;
+  background: var(--db-card);
+  border: 1px solid var(--db-border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.metric-label {
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--db-muted);
+  font-weight: 600;
+}
+.metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--db-ink);
+  margin-top: 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.metric-max {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--db-muted);
+}
+.metric-unit {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--db-muted);
+}
+.metric-trend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.trend-arrow,
+.trend-value {
+  color: var(--db-neg);
+  font-weight: 600;
+}
+.trend-label {
+  color: var(--db-muted);
+}
+
+/* ---- 4. Chart card ---------------------------------------------------- */
+.db-chart-card {
+  background: var(--db-card);
+  border: 1px solid var(--db-border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.db-chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.db-chart-tabs {
+  display: flex;
+  gap: 18px;
+}
+.chart-tab {
+  font-size: 14px;
+  color: var(--db-muted);
+  padding-bottom: 4px;
+}
+.chart-tab.active {
+  color: var(--db-ink);
+  font-weight: 600;
+  border-bottom: 2px solid var(--db-prop);
+}
+.db-chart-ranges {
+  display: flex;
+  border: 1px solid var(--db-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.chart-range {
+  font-size: 13px;
+  color: var(--db-muted);
+  padding: 6px 12px;
+  border-right: 1px solid var(--db-border);
+}
+.chart-range:last-child {
+  border-right: none;
+}
+.chart-range.active {
+  background: var(--db-prop);
+  color: #fff;
+  font-weight: 600;
+}
+
+.line-chart {
+  width: 100%;
+  height: 280px;
+  display: block;
+}
+.grid-line {
+  stroke: #f1f5f9;
+  stroke-width: 1;
+}
+.series-property {
+  fill: none;
+  stroke: var(--db-prop);
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+.series-competitors {
+  fill: none;
+  stroke: var(--db-comp);
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+.dot-property {
+  fill: var(--db-prop);
+}
+.dot-competitors {
+  fill: var(--db-comp);
+}
+.axis-label {
+  fill: var(--db-muted);
+  font-size: 11px;
+}
+
+.db-legend {
+  display: flex;
+  gap: 24px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--db-border);
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--db-muted);
+}
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.legend-dot.dot-prop {
+  background: var(--db-prop);
+}
+.legend-dot.dot-comp {
+  background: var(--db-comp);
+}
+
+/* ---- Responsive: stack cards on mobile -------------------------------- */
+@media (max-width: 768px) {
+  .db-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .db-hotel {
+    margin-left: 0;
+  }
+  .db-cards {
+    flex-direction: column;
+  }
+}

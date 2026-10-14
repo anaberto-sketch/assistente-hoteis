@@ -1,0 +1,326 @@
+:root {
+  --brand: #6d28d9;
+  --brand-dark: #4c1d95;
+  --brand-soft: #ede9fe;
+  --ink: #1f2937;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --bg: #f5f6fa;
+  --high: #dc2626;
+  --medium: #d97706;
+  --low: #2563eb;
+  --shadow: 0 10px 30px rgba(17, 24, 39, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+    Arial, sans-serif;
+  color: var(--ink);
+}
+
+/* ---- Fondo del dashboard (imagen de la captura) ---------------------- */
+.dashboard-bg {
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--bg);
+  position: relative;
+  /* Smooth shrink/grow when the side panel docks. */
+  transition: padding-right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* When the chat is docked, reserve space on the right so the dashboard
+   shrinks instead of being covered (IDE-style side panel). */
+body.chat-docked .dashboard-bg {
+  padding-right: 420px;
+}
+
+/* ---- Botón flotante del chat ----------------------------------------- */
+.chat-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: var(--brand);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background 0.15s ease;
+  z-index: 1000;
+}
+.chat-fab:hover {
+  transform: scale(1.06);
+  background: var(--brand-dark);
+}
+.chat-fab svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* ---- Panel del chat --------------------------------------------------- */
+.chat-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 96px;
+  width: 380px;
+  max-width: calc(100vw - 48px);
+  height: 560px;
+  max-height: calc(100vh - 128px);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+  animation: pop 0.16s ease;
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modo "docked": panel lateral fijo a la derecha, estilo asistente de IDE.
+   Ocupa toda la altura y empuja el dashboard (ver .chat-docked abajo). */
+.chat-panel.expanded {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  max-width: 90vw;
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+  border-left: 1px solid var(--line);
+}
+
+.chat-header {
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  color: #fff;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.chat-header .title {
+  font-weight: 600;
+  font-size: 15px;
+}
+.chat-header .subtitle {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+.chat-header button {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* Grupo de acciones a la derecha del header (expandir, cerrar). */
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.chat-header-actions .icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  padding: 0;
+  transition: background 0.15s ease;
+}
+.chat-header-actions .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.chat-header-actions .icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.hotel-bar {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  background: #faf9ff;
+}
+.hotel-bar select {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--ink);
+  background: #fff;
+}
+
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  background: #fbfbfd;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.msg {
+  max-width: 85%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.msg.user {
+  align-self: flex-end;
+  background: var(--brand);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.msg.bot {
+  align-self: flex-start;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 4px;
+}
+.msg.error {
+  align-self: flex-start;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.levers {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lever {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--low);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: #fff;
+}
+.lever.high {
+  border-left-color: var(--high);
+}
+.lever.medium {
+  border-left-color: var(--medium);
+}
+.lever.low {
+  border-left-color: var(--low);
+}
+.lever .lever-id {
+  font-weight: 600;
+}
+.lever .lever-badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.confidence-chip {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.flag-note {
+  font-size: 11px;
+  color: var(--medium);
+  margin-top: 6px;
+}
+
+.chat-footer {
+  border-top: 1px solid var(--line);
+  padding: 10px;
+  display: flex;
+  gap: 8px;
+  background: #fff;
+}
+.chat-footer input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+}
+.chat-footer input:focus {
+  border-color: var(--brand);
+}
+.chat-footer button {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.chat-footer button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.typing {
+  align-self: flex-start;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 14px 10px;
+}
+.suggestions button {
+  font-size: 12px;
+  border: 1px solid var(--brand-soft);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.suggestions button:hover {
+  background: #e0d7fb;
+}
