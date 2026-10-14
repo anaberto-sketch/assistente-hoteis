@@ -126,7 +126,7 @@ Duas escolhas de ordem que não são arbitrárias:
 
 ## Dados
 
-`data/hotels.csv` — 20 hotéis, 60 colunas, transcritos verbatim do material do time.
+`data/hotels_cleaned.csv` — 20 hotéis, 60 colunas, transcritos verbatim do material do time.
 `data/field_dictionary.yaml` — 59 campos (ES/PT) + sinônimos curados à mão.
 
 Três detalhes de ingestão que valem registrar:
@@ -145,7 +145,7 @@ Os `synonyms` de cada campo **não** vêm do material — são curadoria manual,
 
 | Implementação | Como funciona | Quando usar |
 |---|---|---|
-| `CsvHotelRepository` | lookup direto em `data/hotels.csv` | demo, dev, testes |
+| `CsvHotelRepository` | lookup direto em `data/hotels_cleaned.csv` | demo, dev, testes |
 | `MCPHotelRepository` | mesma interface, mas chama tools nomeadas (`get_hotel_metrics`, `search_hotel_by_name`, `list_hotels`) com headers (`x-hotel-id`, `x-session-id`, `x-requester-token`) | integração com servidor MCP real |
 
 A segunda hoje resolve localmente via `_call_tool` (não há servidor subido no hackathon). Trocar essa linha por `MultiServerMCPClient.call_tool(...)` é a única mudança para plugar num servidor MCP de verdade. O grafo, as regras, o retrieval e os guardrails não precisam saber da diferença.

@@ -1,6 +1,6 @@
 """Consistencia do CSV com o field dictionary.
 
-Estes testes leem data/hotels.csv diretamente (csv stdlib + yaml) e validam os
+Estes testes leem data/hotels_cleaned.csv diretamente (csv stdlib + yaml) e validam os
 DADOS, nao a logica de app. Sao a rede de seguranca que pega regressoes na
 regeneracao do CSV: coluna faltando, flag com valor estranho, faixa AP virada
 numero, celula vazia virada zero, etc.
@@ -14,7 +14,7 @@ from pathlib import Path
 import yaml
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
-CSV_PATH = DATA_DIR / "hotels.csv"
+CSV_PATH = DATA_DIR / "hotels_cleaned.csv"
 DICTIONARY_PATH = DATA_DIR / "field_dictionary.yaml"
 
 EXPECTED_ROWS = 20
@@ -53,7 +53,7 @@ def _rows() -> list[dict[str, str]]:
 def test_all_dictionary_fields_present_in_csv():
     fields = _fields()
     rows = _rows()
-    assert rows, "hotels.csv vazio"
+    assert rows, "hotels_cleaned.csv vazio"
     columns = set(rows[0].keys())
     missing = [f for f in fields if f not in columns]
     assert not missing, f"campos do dicionario ausentes no CSV: {missing}"

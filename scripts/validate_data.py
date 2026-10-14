@@ -1,4 +1,4 @@
-"""Valida data/hotels.csv contra o field dictionary e as regras de tipo.
+"""Valida data/hotels_cleaned.csv contra o field dictionary e as regras de tipo.
 
 Sai com codigo 0 se tudo passar, 1 se houver qualquer erro. Imprime um
 relatorio com os problemas encontrados.
@@ -17,7 +17,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = REPO_ROOT / "data"
-CSV_PATH = DATA_DIR / "hotels.csv"
+CSV_PATH = DATA_DIR / "hotels_cleaned.csv"
 DICTIONARY_PATH = DATA_DIR / "field_dictionary.yaml"
 
 EXPECTED_ROWS = 20
