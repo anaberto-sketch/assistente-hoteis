@@ -1,0 +1,657 @@
+# Dicionario de campos do pipeline de recomendacoes.
+#
+# Transcrito VERBATIM do material fornecido pelo time. Os textos de `es.definition`,
+# `es.how_to_read`, `pt.definition` e `pt.how_to_read` sao copia literal das colunas
+# "Que es / Como leerlo" e "O que e / Como ler".
+#
+# `synonyms` NAO vem do material: foi curado a mao para o retrieval lexico funcionar
+# em ES e PT (a pergunta do hoteleiro usa vocabulario de negocio, nao nome de coluna).
+
+- field: hotel_id
+  block: Identificación
+  type: varchar
+  es:
+    definition: ID del hotel en Despegar. Llave de la tabla.
+    how_to_read: Una fila por hotel. Es el dato con el que se consulta al hotel.
+  pt:
+    definition: ID do hotel na Despegar. Chave da tabela.
+    how_to_read: Uma linha por hotel. É o dado usado para consultar o hotel.
+  synonyms: [id, identificador, chave, clave, llave, codigo]
+
+- field: hotel_name
+  block: Identificación
+  type: varchar
+  es:
+    definition: Nombre del hotel.
+    how_to_read: Usarlo para dirigirse al hotelero. No sirve para comparar.
+  pt:
+    definition: Nome do hotel.
+    how_to_read: Usar para se dirigir ao hoteleiro. Não serve para comparar.
+  synonyms: [nombre, nome, hotel]
+
+- field: country_code
+  block: Identificación
+  type: varchar
+  es:
+    definition: País del hotel (AR, BR, CO, MX, etc.).
+    how_to_read: "Define el idioma de la respuesta: BR en portugués, el resto en español."
+  pt:
+    definition: País do hotel (AR, BR, CO, MX etc.).
+    how_to_read: "Define o idioma da resposta: BR em português, os demais em espanhol."
+  synonyms: [pais, país, idioma, lingua, língua, mercado]
+
+- field: destiny_code
+  block: Identificación
+  type: varchar
+  es:
+    definition: Código IATA del destino donde está el hotel.
+    how_to_read: Es la llave para comparar contra el destino.
+  pt:
+    definition: Código IATA do destino onde está o hotel.
+    how_to_read: É a chave para comparar com o destino.
+  synonyms: [destino, destino iata, ciudad, cidade]
+
+- field: destiny
+  block: Identificación
+  type: varchar
+  es:
+    definition: Nombre del destino y país.
+    how_to_read: "Usarlo al hablar con el hotelero ('en tu destino, Cancún')."
+  pt:
+    definition: Nome do destino e país.
+    how_to_read: "Usar ao falar com o hoteleiro ('no seu destino, Cancún')."
+  synonyms: [destino, ciudad, cidade, plaza, praça]
+
+- field: searchers
+  block: EXPO
+  type: bigint
+  es:
+    definition: Cantidad nominal de búsquedas (n_search) del último snapshot de CVR.
+    how_to_read: Más alto = más exposición. Es un número absoluto, no un porcentaje. NULL = el hotel no tuvo búsquedas en el snapshot, o sea no tiene exposición.
+  pt:
+    definition: Quantidade nominal de buscas (n_search) do último snapshot de CVR.
+    how_to_read: Mais alto = mais exposição. É um número absoluto, não uma porcentagem. NULL = o hotel não teve buscas no snapshot, ou seja, não tem exposição.
+  synonyms: [busca, buscas, pesquisas, exposicao, exposição, visibilidade, impresiones]
+
+- field: detailers
+  block: EXPO
+  type: double
+  es:
+    definition: Cantidad nominal de visitas a la ficha. Se calcula como searchers × cvr_search_success.
+    how_to_read: Es cuánta gente llegó a ver el hotel. La diferencia con searchers muestra cuánta gente lo vio en resultados pero no entró.
+  pt:
+    definition: Quantidade nominal de visitas à ficha. Calculada como searchers × cvr_search_success.
+    how_to_read: É quanta gente chegou a ver o hotel. A diferença com searchers mostra quanta gente o viu nos resultados mas não entrou.
+  synonyms: [visitas, visitas a ficha, cliques, clicks, acessos, detalle, detalhe]
+
+- field: cvr_search_success
+  block: EXPO
+  type: double
+  es:
+    definition: "Searchers → CVR. De las búsquedas, qué fracción termina en una visita a la ficha del hotel. Se expresa como fracción (0 a 1)."
+    how_to_read: "Alto = el hotel se muestra bien y atrae el click. Bajo = aparece pero no genera interés: revisar foto principal, precio y puntaje. Comparar siempre contra el promedio del destino."
+  pt:
+    definition: "Searchers → CVR. Das buscas, qual fração termina em uma visita à ficha do hotel. Expresso como fração (0 a 1)."
+    how_to_read: "Alto = o hotel aparece bem e atrai o clique. Baixo = aparece mas não gera interesse: revisar foto principal, preço e nota. Sempre comparar com a média do destino."
+  synonyms: [conversao, conversão, taxa de conversao, cvr, clique, click, interesse, ctr, taxa de busca]
+
+- field: cvr_detail_success
+  block: EXPO
+  type: double
+  es:
+    definition: "Details → CVR. De quienes entran a la ficha, qué fracción termina reservando. Se expresa como fracción (0 a 1)."
+    how_to_read: "Alto = la ficha convence. Bajo = entra gente pero no compra: revisar precio vs competidores, contenido de la ficha, rate score y políticas. cvr_total = cvr_search_success × cvr_detail_success."
+  pt:
+    definition: "Details → CVR. De quem entra na ficha, qual fração termina reservando. Expresso como fração (0 a 1)."
+    how_to_read: "Alto = a ficha convence. Baixo = entra gente mas não compra: revisar preço vs concorrentes, conteúdo da ficha, rate score e políticas. cvr_total = cvr_search_success × cvr_detail_success."
+  synonyms: [conversao, conversão, cvr, reserva, compra, fechamento, taxa de fechamento, checkout]
+
+- field: cvr_total
+  block: EXPO
+  type: double
+  es:
+    definition: "CVR total del embudo: reservas sobre búsquedas."
+    how_to_read: Mide la eficiencia de todo el embudo. Un valor bajo obliga a mirar cuál de los dos tramos (search o detail) lo explica.
+  pt:
+    definition: "CVR total do funil: reservas sobre buscas."
+    how_to_read: Mede a eficiência de todo o funil. Um valor baixo obriga a olhar qual dos dois trechos (search ou detail) o explica.
+  synonyms: [conversao, conversão, cvr, funil, embudo, eficiencia, eficiência, total]
+
+- field: gb_cy
+  block: RESERVAS
+  type: decimal
+  es:
+    definition: Gross Booking en USD, YTD del año actual (1-ene al 12-oct 2026), solo canal PAM.
+    how_to_read: Es lo vendido en dólares. Compararlo con gb_ly. NULL = sin ventas PAM en el período.
+  pt:
+    definition: Gross Booking em USD, YTD do ano atual (1-jan a 12-out 2026), apenas canal PAM.
+    how_to_read: É o vendido em dólares. Comparar com gb_ly. NULL = sem vendas PAM no período.
+  synonyms: [venda, vendas, faturamento, receita, gross booking, gb, gmv, dolares, dólares, ventas]
+
+- field: gb_ly
+  block: RESERVAS
+  type: decimal
+  es:
+    definition: Gross Booking en USD, mismo período del año anterior (1-ene al 12-oct 2025), solo PAM.
+    how_to_read: Base de comparación para gb_yoy_pct. Es el mismo período, no el año completo.
+  pt:
+    definition: Gross Booking em USD, mesmo período do ano anterior (1-jan a 12-out 2025), apenas PAM.
+    how_to_read: Base de comparação para gb_yoy_pct. É o mesmo período, não o ano completo.
+  synonyms: [ano anterior, ano passado, ly, last year, base de comparacao, comparativo]
+
+- field: bk_cy
+  block: RESERVAS
+  type: bigint
+  es:
+    definition: Cantidad de reservas (bookings) YTD año actual, PAM.
+    how_to_read: Mide cuántas reservas, sin importar el tamaño. Útil junto con rn_cy para ver la estadía promedio.
+  pt:
+    definition: Quantidade de reservas (bookings) YTD ano atual, PAM.
+    how_to_read: Mede quantas reservas, independente do tamanho. Útil junto com rn_cy para ver a estadia média.
+  synonyms: [reserva, reservas, bookings, quantidade, cantidad, volume de reservas]
+
+- field: bk_ly
+  block: RESERVAS
+  type: bigint
+  es:
+    definition: Cantidad de reservas YTD año anterior, PAM.
+    how_to_read: Base de comparación para bk_yoy_pct.
+  pt:
+    definition: Quantidade de reservas YTD ano anterior, PAM.
+    how_to_read: Base de comparação para bk_yoy_pct.
+  synonyms: [reserva, reservas, ano anterior, ano passado, ly, comparativo]
+
+- field: rn_cy
+  block: RESERVAS
+  type: decimal
+  es:
+    definition: Room nights (noches de habitación vendidas) YTD año actual, PAM.
+    how_to_read: Es la métrica principal de volumen. Una reserva de 3 noches en 2 habitaciones son 6 room nights.
+  pt:
+    definition: Room nights (diárias de quarto vendidas) YTD ano atual, PAM.
+    how_to_read: É a métrica principal de volume. Uma reserva de 3 noites em 2 quartos são 6 room nights.
+  synonyms: [room nights, noites, diarias, diárias, quartos, habitaciones, volumen, volume, rn]
+
+- field: rn_ly
+  block: RESERVAS
+  type: decimal
+  es:
+    definition: Room nights YTD año anterior, mismo período, PAM.
+    how_to_read: Base de comparación para rn_yoy_pct.
+  pt:
+    definition: Room nights YTD ano anterior, mesmo período, PAM.
+    how_to_read: Base de comparação para rn_yoy_pct.
+  synonyms: [room nights, noites, diarias, ano anterior, ano passado, ly, comparativo]
+
+- field: gb_yoy_pct
+  block: RESERVAS
+  type: decimal
+  es:
+    definition: Variación porcentual de gross booking contra el año anterior.
+    how_to_read: Positivo = vende más dólares que el año pasado. Negativo = menos. Si GB cae más que RN, el precio promedio está bajando.
+  pt:
+    definition: Variação percentual do gross booking contra o ano anterior.
+    how_to_read: Positivo = vende mais dólares que no ano passado. Negativo = menos. Se o GB cai mais que o RN, o preço médio está caindo.
+  synonyms: [crescimento, variacao, variação, yoy, ano anterior, receita, vendas, faturamento]
+
+- field: bk_yoy_pct
+  block: RESERVAS
+  type: decimal
+  es:
+    definition: Variación porcentual de reservas contra el año anterior.
+    how_to_read: Si bookings cae pero room nights no, las reservas son más largas o de más habitaciones.
+  pt:
+    definition: Variação percentual de reservas contra o ano anterior.
+    how_to_read: Se bookings cai mas room nights não, as reservas são mais longas ou de mais quartos.
+  synonyms: [crescimento, variacao, variação, yoy, ano anterior, reservas]
+
+- field: rn_yoy_pct
+  block: RESERVAS
+  type: decimal
+  es:
+    definition: Variación porcentual de room nights contra el año anterior (YTD).
+    how_to_read: "Métrica principal de 'cómo me va vs el año pasado'. Una caída de más de 10% se considera relevante para el pipeline."
+  pt:
+    definition: Variação percentual de room nights contra o ano anterior (YTD).
+    how_to_read: "Métrica principal de 'como estou vs o ano passado'. Uma queda de mais de 10% é considerada relevante pelo pipeline."
+  synonyms: [crescimento, queda, variacao, variação, yoy, ano anterior, ano passado, room nights, diarias]
+
+- field: gb_35d
+  block: RESERVAS
+  type: decimal
+  es:
+    definition: Gross booking de los últimos 35 días (8-sep al 12-oct 2026), PAM.
+    how_to_read: Mide el momento actual del hotel, sin el arrastre del año.
+  pt:
+    definition: Gross booking dos últimos 35 dias (8-set a 12-out 2026), PAM.
+    how_to_read: Mede o momento atual do hotel, sem o arrasto do ano.
+  synonyms: [recente, ultimos 35 dias, últimos dias, momento, tendencia, tendência, receita recente, vendas recentes]
+
+- field: bk_35d
+  block: RESERVAS
+  type: bigint
+  es:
+    definition: Reservas de los últimos 35 días, PAM.
+    how_to_read: "Muestra chica: con pocas reservas, la tendencia es poco confiable."
+  pt:
+    definition: Reservas dos últimos 35 dias, PAM.
+    how_to_read: "Amostra pequena: com poucas reservas, a tendência é pouco confiável."
+  synonyms: [recente, reservas recentes, ultimos 35 dias, amostra, tendencia, tendência]
+
+- field: rn_35d
+  block: RESERVAS
+  type: decimal
+  es:
+    definition: Room nights de los últimos 35 días, PAM.
+    how_to_read: Volumen reciente. Se usa para calcular el crecimiento reciente.
+  pt:
+    definition: Room nights dos últimos 35 dias, PAM.
+    how_to_read: Volume recente. Usado para calcular o crescimento recente.
+  synonyms: [recente, volume recente, ultimos 35 dias, diarias, room nights, tendencia]
+
+- field: hotel_growth_pct
+  block: RESERVAS
+  type: decimal
+  es:
+    definition: "Tendencia del hotel: promedio diario de gross booking de los últimos 35 días contra el promedio diario del resto del año (250 días), en %."
+    how_to_read: Mayor a 0 = el hotel acelera en el último mes. Menor a 0 = se desacelera. Siempre compararlo con dest_growth_pct. Con pocas reservas es ruidoso.
+  pt:
+    definition: "Tendência do hotel: média diária de gross booking dos últimos 35 dias contra a média diária do resto do ano (250 dias), em %."
+    how_to_read: Maior que 0 = o hotel acelera no último mês. Menor que 0 = desacelera. Sempre comparar com dest_growth_pct. Com poucas reservas é ruidoso.
+  synonyms: [tendencia, tendência, crescimento, aceleracao, aceleração, desaceleracao, ritmo, momento]
+
+- field: dest_growth_pct
+  block: RESERVAS
+  type: decimal
+  es:
+    definition: La misma tendencia calculada para todo el destino.
+    how_to_read: Si el destino crece y el hotel no (hotel_growth_pct menor), el hotel pierde participación. Si ambos caen, es un efecto de mercado y no del hotel.
+  pt:
+    definition: A mesma tendência calculada para todo o destino.
+    how_to_read: Se o destino cresce e o hotel não (hotel_growth_pct menor), o hotel perde participação. Se ambos caem, é efeito de mercado e não do hotel.
+  synonyms: [destino, mercado, tendencia, tendência, crescimento do destino, participacao, participação, share, concorrencia, concorrência]
+
+- field: rn_90d_cy
+  block: RESERVAS
+  type: double
+  es:
+    definition: Room nights con check-in en los próximos 90 días (13-oct-2026 al 11-ene-2027), PAM.
+    how_to_read: Demanda futura ya comprometida. Se mide por fecha de check-in, no de reserva.
+  pt:
+    definition: Room nights com check-in nos próximos 90 dias (13-out-2026 a 11-jan-2027), PAM.
+    how_to_read: Demanda futura já comprometida. Medida por data de check-in, não de reserva.
+  synonyms: [futuro, proximos 90 dias, próximos 90 dias, demanda futura, on the books, otb, pickup, reservas futuras]
+
+- field: rn_90d_ly
+  block: RESERVAS
+  type: double
+  es:
+    definition: Room nights del mismo rango de check-in del año anterior (13-oct-2025 al 11-ene-2026), PAM.
+    how_to_read: Base de comparación para rn_90d_vs_ly.
+  pt:
+    definition: Room nights da mesma faixa de check-in do ano anterior (13-out-2025 a 11-jan-2026), PAM.
+    how_to_read: Base de comparação para rn_90d_vs_ly.
+  synonyms: [futuro, ano anterior, comparativo, proximos 90 dias, base de comparacao]
+
+- field: rn_90d_vs_ly
+  block: RESERVAS
+  type: decimal
+  es:
+    definition: Variación porcentual de los room nights de los próximos 90 días contra el año anterior.
+    how_to_read: "Next 90d vs LY. Negativo = el hotel tiene menos reservas futuras que el año pasado a esta altura: señal de alerta temprana."
+  pt:
+    definition: Variação percentual dos room nights dos próximos 90 dias contra o ano anterior.
+    how_to_read: "Next 90d vs LY. Negativo = o hotel tem menos reservas futuras que no ano passado nesta altura: sinal de alerta antecipado."
+  synonyms: [futuro, queda, variacao, variação, alerta, sinal, antecipado, proximos 90 dias, comparativo]
+
+- field: perf_rn_90d_cy
+  block: RESERVAS
+  type: double
+  es:
+    definition: Room nights de los próximos 90 días según la tabla de performance del pipeline.
+    how_to_read: Es la cifra con la que se compara contra el compset. Puede diferir levemente de rn_90d_cy por la fuente y el momento de cálculo. Para comparar contra el compset usar esta.
+  pt:
+    definition: Room nights dos próximos 90 dias segundo a tabela de performance do pipeline.
+    how_to_read: É o número usado para comparar com o compset. Pode diferir levemente de rn_90d_cy pela fonte e momento de cálculo. Para comparar com o compset, usar este.
+  synonyms: [performance, compset, futuro, proximos 90 dias, comparacao, comparação]
+
+- field: perf_compset_rn_90d_cy
+  block: RESERVAS
+  type: double
+  es:
+    definition: Room nights promedio de los próximos 90 días de los 5 competidores más parecidos (compset).
+    how_to_read: Es el vs compset. NULL = el hotel no tiene compset definido, no se puede comparar.
+  pt:
+    definition: Room nights médios dos próximos 90 dias dos 5 concorrentes mais parecidos (compset).
+    how_to_read: É o vs compset. NULL = o hotel não tem compset definido, não dá para comparar.
+  synonyms: [compset, concorrentes, competidores, comparacao, comparação, benchmark, pares, mercado]
+
+- field: flag_rn_below_compset
+  block: RESERVAS
+  type: varchar
+  es:
+    definition: "'true' si el hotel tiene menos de 95% de los room nights del compset en los próximos 90 días."
+    how_to_read: true = vende menos que sus competidores directos. NULL = sin compset. false = está en línea o por encima.
+  pt:
+    definition: "'true' se o hotel tem menos de 95% dos room nights do compset nos próximos 90 dias."
+    how_to_read: true = vende menos que seus concorrentes diretos. NULL = sem compset. false = está em linha ou acima.
+  synonyms: [compset, flag, alerta, abaixo, vende menos, concorrentes, competidores]
+
+- field: total_lose_logueado_pct_35d
+  block: TARIFAS
+  type: decimal
+  es:
+    definition: Porcentaje de comparaciones (ponderadas, usuarios logueados, 35 días) donde el precio de Despegar pierde contra Booking.
+    how_to_read: Más de 30% prende el flag de precio vs Booking. Cuanto más alto, más veces el hotel es más caro en Despegar que en Booking.
+  pt:
+    definition: Porcentagem de comparações (ponderadas, usuários logados, 35 dias) em que o preço da Despegar perde para a Booking.
+    how_to_read: Mais de 30% liga o flag de preço vs Booking. Quanto mais alto, mais vezes o hotel é mais caro na Despegar que na Booking.
+  synonyms: [preco, preço, tarifa, paridade, perder, perde, booking, caro, mais caro, competicao, competição, logado]
+
+- field: profundidad_total_bkg_35d
+  block: TARIFAS
+  type: decimal
+  es:
+    definition: Cuánto más caro es Despegar que Booking en promedio, solo en los casos donde pierde (en %).
+    how_to_read: Mide la gravedad. Menos de 10 = apenas fuera de paridad, se corrige ajustando la tarifa. 10 o más = brecha grande, suele requerir campaña.
+  pt:
+    definition: Quanto mais caro é a Despegar que a Booking em média, apenas nos casos em que perde (em %).
+    how_to_read: Mede a gravidade. Menos de 10 = apenas fora de paridade, corrige-se ajustando a tarifa. 10 ou mais = brecha grande, costuma exigir campanha.
+  synonyms: [profundidade, gravidade, brecha, gap, diferenca, diferença, quao caro, quão caro, booking, preco, preço]
+
+- field: worst_ap_bkg_35d
+  block: TARIFAS
+  type: varchar
+  es:
+    definition: Tramo de anticipación (AP) donde más pierde contra Booking.
+    how_to_read: "Ej: 000-007 = compras de último momento. 046-090 = compras con mucha anticipación. Indica qué tipo de campaña conviene."
+  pt:
+    definition: Faixa de antecedência (AP) em que mais perde para a Booking.
+    how_to_read: "Ex: 000-007 = compras de última hora. 046-090 = compras com muita antecedência. Indica que tipo de campanha convém."
+  synonyms: [antecedencia, antecedência, anticipacion, anticipación, ap, ultima hora, última hora, faixa, tramo, booking]
+
+- field: profundidad_worst_ap_bkg_35d
+  block: TARIFAS
+  type: decimal
+  es:
+    definition: Profundidad de la pérdida (en %) en el peor tramo de anticipación vs Booking.
+    how_to_read: Qué tan grande es la brecha en el tramo más problemático.
+  pt:
+    definition: Profundidade da perda (em %) na pior faixa de antecedência vs Booking.
+    how_to_read: Quão grande é a brecha na faixa mais problemática.
+  synonyms: [profundidade, brecha, gravidade, pior faixa, antecedencia, booking]
+
+- field: worst_ap_compset
+  block: TARIFAS
+  type: varchar
+  es:
+    definition: Tramo de anticipación donde más pierde en precio contra el compset.
+    how_to_read: Igual que worst_ap_bkg_35d pero contra competidores directos.
+  pt:
+    definition: Faixa de antecedência em que mais perde em preço para o compset.
+    how_to_read: Igual a worst_ap_bkg_35d mas contra concorrentes diretos.
+  synonyms: [antecedencia, antecedência, compset, concorrentes, faixa, tramo, pior faixa]
+
+- field: profundidad_worst_ap_compset
+  block: TARIFAS
+  type: decimal
+  es:
+    definition: Profundidad de la pérdida (en %) en el peor tramo vs compset.
+    how_to_read: Brecha en el tramo más problemático.
+  pt:
+    definition: Profundidade da perda (em %) na pior faixa vs compset.
+    how_to_read: Brecha na faixa mais problemática.
+  synonyms: [profundidade, brecha, compset, concorrentes, pior faixa]
+
+- field: profundidad_total_compset
+  block: TARIFAS
+  type: decimal
+  es:
+    definition: Cuánto más caro es el hotel que el compset en promedio, en los casos donde pierde (en %).
+    how_to_read: Menos de 10 = ajuste leve de tarifa. 10 o más = brecha grande.
+  pt:
+    definition: Quanto mais caro é o hotel que o compset em média, nos casos em que perde (em %).
+    how_to_read: Menos de 10 = ajuste leve de tarifa. 10 ou mais = brecha grande.
+  synonyms: [profundidade, brecha, gap, compset, concorrentes, caro, preco, preço, gravidade]
+
+- field: delta_precio_compset_pct
+  block: TARIFAS
+  type: decimal
+  es:
+    definition: Diferencia de precio contra el compset, ajustada por calidad (estrellas, rate score), en %.
+    how_to_read: Positivo = más caro que el compset. Negativo = más barato. Más de 5% se considera caro. Si el hotel es más caro pero también de mejor calidad, el ajuste ya lo compensó.
+  pt:
+    definition: Diferença de preço contra o compset, ajustada por qualidade (estrelas, rate score), em %.
+    how_to_read: Positivo = mais caro que o compset. Negativo = mais barato. Mais de 5% é considerado caro. Se o hotel é mais caro mas também de melhor qualidade, o ajuste já compensou.
+  synonyms: [preco, preço, tarifa, delta, diferenca, diferença, compset, concorrentes, caro, barato, paridade, ajuste de qualidade]
+
+- field: target_asp
+  block: TARIFAS
+  type: double
+  es:
+    definition: ASP (precio promedio por noche) que ve el usuario en las búsquedas para este hotel.
+    how_to_read: Precio de referencia. Se compara con compset_asp_avg.
+  pt:
+    definition: ASP (preço médio por noite) que o usuário vê nas buscas para este hotel.
+    how_to_read: Preço de referência. Comparar com compset_asp_avg.
+  synonyms: [preco, preço, tarifa, asp, diaria, diária, preco medio, preço médio, valor, noite]
+
+- field: compset_asp_avg
+  block: TARIFAS
+  type: double
+  es:
+    definition: ASP promedio de los competidores del compset.
+    how_to_read: Referencia de mercado directo. Sin ajuste por calidad.
+  pt:
+    definition: ASP médio dos concorrentes do compset.
+    how_to_read: Referência de mercado direto. Sem ajuste por qualidade.
+  synonyms: [preco, preço, asp, compset, concorrentes, mercado, media, média, referencia, referência]
+
+- field: avg_genius_discount_pct
+  block: TARIFAS
+  type: decimal
+  es:
+    definition: Descuento Genius promedio que ofrece el hotel en Booking (en %).
+    how_to_read: Si es mayor que el descuento opaco propio, el hotel le da más descuento a Booking que a Despegar. Es una causa común de pérdida de paridad.
+  pt:
+    definition: Desconto Genius médio que o hotel oferece na Booking (em %).
+    how_to_read: Se for maior que o desconto opaco próprio, o hotel dá mais desconto à Booking que à Despegar. É uma causa comum de perda de paridade.
+  synonyms: [desconto, genius, booking, promocao, promoção, paridade, descuento]
+
+- field: descuento_opaco_pct
+  block: TARIFAS
+  type: decimal
+  es:
+    definition: Descuento opaco que el hotel tiene cargado en Despegar (en puntos porcentuales).
+    how_to_read: Menos de 5 = descuento insuficiente. La tarifa opaca no muestra el nombre del hotel hasta que se compra.
+  pt:
+    definition: Desconto opaco que o hotel tem carregado na Despegar (em pontos percentuais).
+    how_to_read: Menos de 5 = desconto insuficiente. A tarifa opaca não mostra o nome do hotel até a compra.
+  synonyms: [desconto, descuento, opaco, opaca, promocao, promoção, campanha]
+
+- field: descuento_package_pct
+  block: TARIFAS
+  type: decimal
+  es:
+    definition: Descuento para tarifas de paquete que tiene el hotel (en puntos porcentuales).
+    how_to_read: Menos de 10 = descuento bajo para venta en paquete.
+  pt:
+    definition: Desconto para tarifas de pacote que o hotel tem (em pontos percentuais).
+    how_to_read: Menos de 10 = desconto baixo para venda em pacote.
+  synonyms: [desconto, descuento, pacote, paquete, package, promocao, promoção]
+
+- field: descuento_advanced_purchase_pct
+  block: TARIFAS
+  type: decimal
+  es:
+    definition: Descuento por compra anticipada que tiene el hotel (en puntos porcentuales).
+    how_to_read: Si el hotel pierde en los tramos de mucha anticipación, un descuento de compra anticipada ayuda.
+  pt:
+    definition: Desconto por compra antecipada que o hotel tem (em pontos percentuais).
+    how_to_read: Se o hotel perde nas faixas de muita antecedência, um desconto de compra antecipada ajuda.
+  synonyms: [desconto, descuento, compra antecipada, anticipada, antecedencia, antecedência, ap, promocao]
+
+- field: appearances_pct
+  block: TARIFAS
+  type: decimal
+  es:
+    definition: Porcentaje de las búsquedas donde Despegar compite con una oferta de este hotel.
+    how_to_read: Bajo = muchas veces Despegar no tiene oferta para ese hotel (suele ser disponibilidad). Alto = el hotel compite casi siempre.
+  pt:
+    definition: Porcentagem das buscas em que a Despegar compete com uma oferta deste hotel.
+    how_to_read: Baixo = muitas vezes a Despegar não tem oferta para o hotel (costuma ser disponibilidade). Alto = o hotel compete quase sempre.
+  synonyms: [aparicao, aparição, apariciones, disponibilidade, inventario, inventário, oferta, compite, competir, exposicao]
+
+- field: lose_rate_on_compete_pct
+  block: TARIFAS
+  type: decimal
+  es:
+    definition: De las veces que Despegar compite, porcentaje en las que pierde contra otro proveedor.
+    how_to_read: "Alto + appearances_pct alto = compite mucho y pierde mucho: problema real de precio. Más de 30 es alto."
+  pt:
+    definition: Das vezes em que a Despegar compete, porcentagem em que perde para outro fornecedor.
+    how_to_read: "Alto + appearances_pct alto = compete muito e perde muito: problema real de preço. Mais de 30 é alto."
+  synonyms: [perda, perder, derrota, lose rate, competicao, competição, preco, preço, fornecedor, concorrencia]
+
+- field: adjustment_pct_avg
+  block: TARIFAS
+  type: double
+  es:
+    definition: Ajuste promedio de tarifa que habría necesitado Despegar para ganar (en %).
+    how_to_read: Cuánto bajar el precio para ganar las comparaciones perdidas. Solo se calcula donde compitió y perdió.
+  pt:
+    definition: Ajuste médio de tarifa que a Despegar teria precisado para ganhar (em %).
+    how_to_read: Quanto baixar o preço para ganhar as comparações perdidas. Só é calculado onde competiu e perdeu.
+  synonyms: [ajuste, ajustar, quanto baixar, reduzir, desconto necessario, necessario, necessário, preco, preço]
+
+- field: flag_precio_bkg
+  block: TARIFAS
+  type: varchar
+  es:
+    definition: "'true' si total_lose_logueado_pct_35d es mayor a 30."
+    how_to_read: true = problema de precio confirmado vs Booking.
+  pt:
+    definition: "'true' se total_lose_logueado_pct_35d for maior que 30."
+    how_to_read: true = problema de preço confirmado vs Booking.
+  synonyms: [flag, alerta, preco, preço, booking, problema, paridade]
+
+- field: flag_precio_compset
+  block: TARIFAS
+  type: varchar
+  es:
+    definition: "'true' si el precio ajustado por calidad supera al del compset en más de 5%."
+    how_to_read: true = problema de precio confirmado vs competidores directos.
+  pt:
+    definition: "'true' se o preço ajustado por qualidade superar o do compset em mais de 5%."
+    how_to_read: true = problema de preço confirmado vs concorrentes diretos.
+  synonyms: [flag, alerta, preco, preço, compset, concorrentes, competidores, problema]
+
+- field: flag_opaco
+  block: TARIFAS
+  type: varchar
+  es:
+    definition: "'true' si el descuento opaco es menor a 5%."
+    how_to_read: "true = el descuento opaco es insuficiente. No significa 'activo'."
+  pt:
+    definition: "'true' se o desconto opaco for menor que 5%."
+    how_to_read: "true = o desconto opaco é insuficiente. Não significa 'ativo'."
+  synonyms: [flag, alerta, opaco, opaca, desconto, insuficiente]
+
+- field: flag_package
+  block: TARIFAS
+  type: varchar
+  es:
+    definition: "'true' si el descuento package es menor a 10%."
+    how_to_read: true = el descuento de paquete es insuficiente.
+  pt:
+    definition: "'true' se o desconto package for menor que 10%."
+    how_to_read: true = o desconto de pacote é insuficiente.
+  synonyms: [flag, alerta, pacote, paquete, package, desconto, insuficiente]
+
+- field: flag_genius_mayor_opaco
+  block: TARIFAS
+  type: varchar
+  es:
+    definition: "'true' si el descuento Genius es más de 1 punto mayor que el opaco."
+    how_to_read: true = el hotel da más descuento a Booking que a Despegar.
+  pt:
+    definition: "'true' se o desconto Genius for mais de 1 ponto maior que o opaco."
+    how_to_read: true = o hotel dá mais desconto à Booking que à Despegar.
+  synonyms: [flag, alerta, genius, opaco, desconto, booking, paridade]
+
+- field: root_cause
+  block: TARIFAS
+  type: varchar
+  es:
+    definition: Causa raíz de la pérdida de precio, según el tipificador de adversas.
+    how_to_read: "Explica por qué pierde. Ej: disparidad por falta de promoción o por % de descuento, que se resuelven con campaña y no ajustando la tarifa."
+  pt:
+    definition: Causa raiz da perda de preço, segundo o tipificador de adversas.
+    how_to_read: "Explica por que perde. Ex: disparidade por falta de promoção ou por % de desconto, que se resolvem com campanha e não ajustando a tarifa."
+  synonyms: [causa, causa raiz, motivo, razao, razão, tipificador, disparidade, promocao, promoção, roompack, inventario, fornecedor]
+
+- field: quality_adjustment_level
+  block: TARIFAS
+  type: integer
+  es:
+    definition: Nivel de ajuste de calidad usado para comparar contra el compset (1 a 3).
+    how_to_read: 1 = ajuste completo con estrellas, rate y reviews. 2 = solo estrellas. 3 = sin ajuste. Cuanto más alto el número, menos confiable la comparación de precio.
+  pt:
+    definition: Nível de ajuste de qualidade usado para comparar com o compset (1 a 3).
+    how_to_read: 1 = ajuste completo com estrelas, rate e reviews. 2 = só estrelas. 3 = sem ajuste. Quanto maior o número, menos confiável a comparação de preço.
+  synonyms: [qualidade, ajuste, confiabilidade, confianca, confiança, compset, comparacao, comparação]
+
+- field: content_score
+  block: CALIDAD
+  type: decimal
+  es:
+    definition: Completitud de la ficha del hotel, de 0 a 1 (fotos, descripción, amenities).
+    how_to_read: Menos de 0,70 se considera ficha incompleta y dispara la palanca Completa tu ficha.
+  pt:
+    definition: Completude da ficha do hotel, de 0 a 1 (fotos, descrição, amenities).
+    how_to_read: Menos de 0,70 é considerado ficha incompleta e dispara a alavanca Complete sua ficha.
+  synonyms: [conteudo, conteúdo, ficha, completude, completitud, fotos, descricao, descrição, amenities, qualidade]
+
+- field: rate_score
+  block: CALIDAD
+  type: double
+  es:
+    definition: Puntaje de reseñas del hotel, de 0 a 10.
+    how_to_read: Menos de 7,5 se considera bajo. También se compara contra el promedio del destino.
+  pt:
+    definition: Nota de avaliações do hotel, de 0 a 10.
+    how_to_read: Menos de 7,5 é considerado baixo. Também se compara com a média do destino.
+  synonyms: [nota, avaliacao, avaliação, puntaje, puntuacion, puntuación, reviews, reseñas, reputacao, reputação, satisfacao]
+
+- field: star_rating
+  block: CALIDAD
+  type: double
+  es:
+    definition: Categoría de estrellas del hotel.
+    how_to_read: Define con qué hoteles se compara en el compset.
+  pt:
+    definition: Categoria de estrelas do hotel.
+    how_to_read: Define com quais hotéis é comparado no compset.
+  synonyms: [estrela, estrelas, categoria, categoría, estrellas, classificacao, classificação]
+
+- field: reviews_count
+  block: CALIDAD
+  type: integer
+  es:
+    definition: Cantidad de reseñas.
+    how_to_read: Pocas reseñas (menos de 50) hacen que el rate_score sea poco confiable.
+  pt:
+    definition: Quantidade de avaliações.
+    how_to_read: Poucas avaliações (menos de 50) tornam o rate_score pouco confiável.
+  synonyms: [avaliacoes, avaliações, reseñas, reviews, quantidade, cantidad, amostra]
+
+- field: cancel_rate_pct
+  block: CALIDAD
+  type: decimal
+  es:
+    definition: Tasa de cancelación de reservas creadas entre jul y sep 2025 (fuente Fenix), en %.
+    how_to_read: "Más de 40% se considera alta, como referencia orientativa. Dato de Q3 2025 y sin comparación contra el destino: no afirmar que 'empeoró' ni que es mejor o peor que el mercado."
+  pt:
+    definition: Taxa de cancelamento de reservas criadas entre jul e set 2025 (fonte Fenix), em %.
+    how_to_read: "Mais de 40% é considerado alto, como referência orientativa. Dado de Q3 2025 e sem comparação com o destino: não afirmar que 'piorou' nem que é melhor ou pior que o mercado."
+  synonyms: [cancelamento, cancelacion, cancelación, cancelamentos, churn, taxa de cancelamento]

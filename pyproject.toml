@@ -1,0 +1,31 @@
+[project]
+name = "assistant-hotel"
+version = "0.1.0"
+description = "Chat de performance hoteleira sobre o pipeline de recomendacoes (RAG lexico + LangGraph)"
+readme = "README.md"
+# `typing.NotRequired` (usado no state) exige 3.11+.
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph==1.2.15",
+    "anthropic==1.13.0",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/assistant_hotel"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = ["integration: chama o LLM real (deselecionado por padrao)"]
+addopts = "-m 'not integration'"
