@@ -31,30 +31,15 @@ body,
   min-height: 100vh;
   width: 100%;
   background-color: var(--bg);
-  background-image: url("/dashboard-bg.png");
-  background-size: cover;
-  background-position: top center;
-  background-repeat: no-repeat;
   position: relative;
+  /* Smooth shrink/grow when the side panel docks. */
+  transition: padding-right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Fallback cuando no hay imagen todavía: avisa dónde ponerla. */
-.bg-placeholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: var(--muted);
-  font-size: 14px;
-  padding: 24px;
-}
-.bg-placeholder code {
-  background: #fff;
-  padding: 2px 6px;
-  border-radius: 6px;
-  border: 1px solid var(--line);
+/* When the chat is docked, reserve space on the right so the dashboard
+   shrinks instead of being covered (IDE-style side panel). */
+body.chat-docked .dashboard-bg {
+  padding-right: 420px;
 }
 
 /* ---- Botón flotante del chat ----------------------------------------- */
@@ -114,6 +99,20 @@ body,
   }
 }
 
+/* Modo "docked": panel lateral fijo a la derecha, estilo asistente de IDE.
+   Ocupa toda la altura y empuja el dashboard (ver .chat-docked abajo). */
+.chat-panel.expanded {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  max-width: 90vw;
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+  border-left: 1px solid var(--line);
+}
+
 .chat-header {
   background: linear-gradient(135deg, var(--brand), var(--brand-dark));
   color: #fff;
@@ -138,6 +137,30 @@ body,
   cursor: pointer;
   font-size: 20px;
   line-height: 1;
+}
+
+/* Grupo de acciones a la derecha del header (expandir, cerrar). */
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.chat-header-actions .icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  padding: 0;
+  transition: background 0.15s ease;
+}
+.chat-header-actions .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.chat-header-actions .icon-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .hotel-bar {

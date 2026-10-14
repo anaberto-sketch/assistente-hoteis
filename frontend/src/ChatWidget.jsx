@@ -20,6 +20,30 @@ function ChatIcon() {
   );
 }
 
+function ExpandIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path
+        d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CollapseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path
+        d="M9 3v6H3M21 15h-6v6M15 9l6-6M3 21l6-6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function Lever({ lever }) {
   return (
     <div className={`lever ${lever.severity}`}>
@@ -33,6 +57,7 @@ function Lever({ lever }) {
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [hotels, setHotels] = useState([]);
   const [hotelId, setHotelId] = useState("345798"); // demo por defecto
   const [messages, setMessages] = useState([]);
@@ -51,6 +76,15 @@ export default function ChatWidget() {
       .catch(() => setHotels([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // When docked (open + expanded) the dashboard must shrink to make room for
+  // the side panel. We toggle a body class so the layout reacts to it without
+  // threading state through App.
+  useEffect(() => {
+    const docked = open && expanded;
+    document.body.classList.toggle("chat-docked", docked);
+    return () => document.body.classList.remove("chat-docked");
+  }, [open, expanded]);
 
   useEffect(() => {
     if (bodyRef.current) {
@@ -105,7 +139,7 @@ export default function ChatWidget() {
   return (
     <>
       {open && (
-        <div className="chat-panel">
+        <div className={`chat-panel ${expanded ? "expanded" : ""}`}>
           <div className="chat-header">
             <div>
               <div className="title">Asistente de Revenue</div>
@@ -113,9 +147,24 @@ export default function ChatWidget() {
                 Preguntá sobre las métricas de tu hotel
               </div>
             </div>
-            <button onClick={() => setOpen(false)} aria-label="Cerrar">
-              ×
-            </button>
+            <div className="chat-header-actions">
+              {/* Toggle between corner size and full-screen. */}
+              <button
+                className="icon-btn"
+                onClick={() => setExpanded((e) => !e)}
+                aria-label={expanded ? "Contraer" : "Expandir"}
+                title={expanded ? "Contraer" : "Expandir"}
+              >
+                {expanded ? <CollapseIcon /> : <ExpandIcon />}
+              </button>
+              <button
+                className="icon-btn"
+                onClick={() => setOpen(false)}
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <div className="hotel-bar">
