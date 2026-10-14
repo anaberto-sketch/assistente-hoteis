@@ -39,7 +39,7 @@ class Settings:
             ),
             data_dir=data_dir,
             hotels_file=Path(
-                os.environ.get("ASSISTANT_HOTEL_HOTELS_FILE", data_dir / "hotels.csv")
+                os.environ.get("ASSISTANT_HOTEL_HOTELS_FILE", data_dir / "hotels_cleaned.csv")
             ),
             dictionary_file=Path(
                 os.environ.get(

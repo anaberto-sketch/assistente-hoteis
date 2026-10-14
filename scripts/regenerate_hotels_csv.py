@@ -1,4 +1,4 @@
-"""Gera data/hotels.csv a partir do xlsx do material.
+"""Gera data/hotels_cleaned.csv a partir do xlsx do material.
 
 A fonte canonica sao as 20 linhas de hotel da aba "2. Datos y query" do xlsx.
 As metricas ja vem pre-computadas do Metabase (query 171721); aqui so
@@ -21,7 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = REPO_ROOT / "data"
 XLSX_PATH = DATA_DIR / "Hackaton AI - Asistente de Revenue para Hoteles (1).xlsx"
 DICTIONARY_PATH = DATA_DIR / "field_dictionary.yaml"
-CSV_PATH = DATA_DIR / "hotels.csv"
+CSV_PATH = DATA_DIR / "hotels_cleaned.csv"
 
 SHEET = "2. Datos y query"
 DROP_COLUMNS = frozenset({"perfil_ejemplo"})
