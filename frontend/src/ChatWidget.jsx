@@ -1,12 +1,62 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchHotels, sendChat } from "./api";
+import LanguageToggle from "./LanguageToggle";
 
-const SUGGESTIONS = [
-  "¿Cómo viene mi hotel en general?",
-  "¿Cuál es mi principal problema?",
-  "¿Estoy más caro que la competencia?",
-  "¿Qué debería hacer primero para vender más?",
-];
+// Strings de interface indexadas por idioma. Trocar o toggle troca TUDO
+// (labels, placeholders, sugestoes, erros) para o proximo turno. O historico
+// ja renderizado nao e modificado -- a conversa anterior fica no idioma antigo.
+const COPY = {
+  pt: {
+    title: "Assistente de Revenue",
+    subtitle: "Pergunte sobre as métricas do seu hotel",
+    hotelLabel: "Hotel:",
+    greeting: (hotelName) =>
+      `Olá! Sou seu assistente de performance${hotelName ? ` para ${hotelName}` : ""}. Se não entender alguma métrica do painel, me pergunte.`,
+    suggestions: [
+      "Como está meu hotel no geral?",
+      "Qual é meu principal problema?",
+      "Estou mais caro que a concorrência?",
+      "O que devo fazer primeiro para vender mais?",
+    ],
+    typing: "escrevendo…",
+    placeholder: "Escreva sua pergunta…",
+    send: "Enviar",
+    expand: "Expandir",
+    collapse: "Recolher",
+    close: "Fechar",
+    openChat: "Abrir chat",
+    noAnswer: "(sem resposta)",
+    connectionError: "Erro de conexão.",
+    tokenMissing:
+      "O serviço de IA não está disponível (falta a credencial do modelo).",
+    confidence: "Confiança do diagnóstico:",
+  },
+  es: {
+    title: "Asistente de Revenue",
+    subtitle: "Preguntá sobre las métricas de tu hotel",
+    hotelLabel: "Hotel:",
+    greeting: (hotelName) =>
+      `¡Hola! Soy tu asistente de performance${hotelName ? ` para ${hotelName}` : ""}. Si no entendés alguna métrica del panel, preguntame.`,
+    suggestions: [
+      "¿Cómo viene mi hotel en general?",
+      "¿Cuál es mi principal problema?",
+      "¿Estoy más caro que la competencia?",
+      "¿Qué debería hacer primero para vender más?",
+    ],
+    typing: "escribiendo…",
+    placeholder: "Escribí tu pregunta…",
+    send: "Enviar",
+    expand: "Expandir",
+    collapse: "Contraer",
+    close: "Cerrar",
+    openChat: "Abrir chat",
+    noAnswer: "(sin respuesta)",
+    connectionError: "Error de conexión.",
+    tokenMissing:
+      "El servicio de IA no está disponible (falta la credencial del modelo).",
+    confidence: "Confianza del diagnóstico:",
+  },
+};
 
 function ChatIcon() {
   return (
@@ -55,7 +105,7 @@ function Lever({ lever }) {
   );
 }
 
-export default function ChatWidget() {
+export default function ChatWidget({ language, onLanguageChange }) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [hotels, setHotels] = useState([]);
@@ -64,6 +114,8 @@ export default function ChatWidget() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bodyRef = useRef(null);
+
+  const t = COPY[language] || COPY.es;
 
   useEffect(() => {
     fetchHotels()
@@ -113,22 +165,27 @@ export default function ChatWidget() {
       .map((m) => ({ role: m.role, content: m.content }));
 
     try {
-      const data = await sendChat({ question: text, hotelId, history });
+      const data = await sendChat({
+        question: text,
+        hotelId,
+        history,
+        language,
+      });
       setMessages((m) => [
         ...m,
         {
           role: "assistant",
-          content: data.answer || "(sin respuesta)",
+          content: data.answer || t.noAnswer,
           levers: data.levers || [],
           confidence: data.confidence,
           guardrailFlags: data.guardrail_flags || [],
         },
       ]);
     } catch (err) {
-      setMessages((m) => [
-        ...m,
-        { role: "error", content: err.message || "Error de conexión." },
-      ]);
+      // sendChat anexa `code` ao Error: traduz aqui para o idioma ativo.
+      const msg =
+        err?.code === "token_missing" ? t.tokenMissing : t.connectionError;
+      setMessages((m) => [...m, { role: "error", content: msg }]);
     } finally {
       setLoading(false);
     }
@@ -141,26 +198,29 @@ export default function ChatWidget() {
       {open && (
         <div className={`chat-panel ${expanded ? "expanded" : ""}`}>
           <div className="chat-header">
-            <div>
-              <div className="title">Asistente de Revenue</div>
-              <div className="subtitle">
-                Preguntá sobre las métricas de tu hotel
-              </div>
+            <div className="chat-header-text">
+              <div className="title">{t.title}</div>
+              <div className="subtitle">{t.subtitle}</div>
             </div>
             <div className="chat-header-actions">
+              <LanguageToggle
+                value={language}
+                onChange={onLanguageChange}
+                placement="chat"
+              />
               {/* Toggle between corner size and full-screen. */}
               <button
                 className="icon-btn"
                 onClick={() => setExpanded((e) => !e)}
-                aria-label={expanded ? "Contraer" : "Expandir"}
-                title={expanded ? "Contraer" : "Expandir"}
+                aria-label={expanded ? t.collapse : t.expand}
+                title={expanded ? t.collapse : t.expand}
               >
                 {expanded ? <CollapseIcon /> : <ExpandIcon />}
               </button>
               <button
                 className="icon-btn"
                 onClick={() => setOpen(false)}
-                aria-label="Cerrar"
+                aria-label={t.close}
               >
                 ×
               </button>
@@ -168,7 +228,7 @@ export default function ChatWidget() {
           </div>
 
           <div className="hotel-bar">
-            <span>Hotel:</span>
+            <span>{t.hotelLabel}</span>
             <select value={hotelId} onChange={onChangeHotel}>
               {hotels.length === 0 && <option value={hotelId}>{hotelId}</option>}
               {hotels.map((h) => (
@@ -182,9 +242,7 @@ export default function ChatWidget() {
           <div className="chat-body" ref={bodyRef}>
             {messages.length === 0 && (
               <div className="msg bot">
-                ¡Hola! Soy tu asistente de performance
-                {currentHotel ? ` para ${currentHotel.hotel_name}` : ""}. Si no
-                entendés alguna métrica del panel, preguntame.
+                {t.greeting(currentHotel?.hotel_name)}
               </div>
             )}
 
@@ -209,7 +267,7 @@ export default function ChatWidget() {
                   )}
                   {m.confidence && (
                     <div className="confidence-chip">
-                      Confianza del diagnóstico: {m.confidence}
+                      {t.confidence} {m.confidence}
                     </div>
                   )}
                   {m.guardrailFlags &&
@@ -222,12 +280,12 @@ export default function ChatWidget() {
               );
             })}
 
-            {loading && <div className="typing">escribiendo…</div>}
+            {loading && <div className="typing">{t.typing}</div>}
           </div>
 
           {messages.length === 0 && (
             <div className="suggestions">
-              {SUGGESTIONS.map((s) => (
+              {t.suggestions.map((s) => (
                 <button key={s} onClick={() => ask(s)}>
                   {s}
                 </button>
@@ -245,11 +303,11 @@ export default function ChatWidget() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Escribí tu pregunta…"
+              placeholder={t.placeholder}
               disabled={loading}
             />
             <button type="submit" disabled={loading || !input.trim()}>
-              Enviar
+              {t.send}
             </button>
           </form>
         </div>
@@ -258,7 +316,7 @@ export default function ChatWidget() {
       <button
         className="chat-fab"
         onClick={() => setOpen((o) => !o)}
-        aria-label="Abrir chat"
+        aria-label={t.openChat}
       >
         <ChatIcon />
       </button>
