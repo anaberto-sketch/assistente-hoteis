@@ -43,22 +43,34 @@ class LLMClient(Protocol):
 
 
 class GenPlatLLM:
-    def __init__(self, settings: Settings | None = None) -> None:
-        # Import tardio: manter o import no topo obrigaria a rede instalada
-        # para rodar os testes de dominio.
-        from anthropic import Anthropic
+    """Cliente do GenPlat com credencial PREGUICOSA.
 
+    O token so e lido na primeira chamada, nunca no construtor. Isso mantem o
+    CLI e a API de pe sem credencial: listar hoteis, resolver o hotel e rodar o
+    diagnostico deterministico nao precisam de LLM -- so a narrativa precisa.
+    """
+
+    def __init__(self, settings: Settings | None = None) -> None:
         self._settings = settings or Settings.from_env()
-        self._client = Anthropic(
-            base_url=self._settings.genplat_base_url,
-            auth_token=read_requester_token(self._settings.token_path),
-        )
+        self._client: Any = None
+
+    def _connect(self) -> Any:
+        if self._client is None:
+            # Import tardio: manter o import no topo obrigaria a rede instalada
+            # para rodar os testes de dominio.
+            from anthropic import Anthropic
+
+            self._client = Anthropic(
+                base_url=self._settings.genplat_base_url,
+                auth_token=read_requester_token(self._settings.token_path),
+            )
+        return self._client
 
     def generate(self, system: str, messages: list[dict[str, Any]]) -> Completion:
         # Sem `temperature`: o SDK anthropic 1.13.0 nao expoe parametros de
         # amostragem na Messages API (so `output_config.effort`/`format`).
         # Tampouco usamos `thinking`/`effort`, que o gateway pode nao aceitar.
-        response = self._client.messages.create(
+        response = self._connect().messages.create(
             model=self._settings.model,
             max_tokens=self._settings.max_tokens,
             system=system,

@@ -32,8 +32,10 @@ O LLM é a **última** etapa e só narra fatos já calculados.
 ## Como rodar
 
 ```bash
-uv sync
+uv sync --extra dev
 ```
+
+> `uv sync` sem `--extra dev` **não instala o pytest** — o extra `dev` não entra por padrão. Se `uv run pytest` reclamar de módulo faltando, é isso.
 
 **Credencial.** O GenPlat exige `Authorization: Bearer <token>`; o SDK Anthropic manda `x-api-key` por padrão e o gateway responde 401. O cliente usa `auth_token=`, que emite o header certo. O token vem do Tompero e nunca é logado.
 
@@ -41,6 +43,8 @@ uv sync
 tompero auth get requester-token   # se ainda não existir
 uv run python -m assistant_hotel.llm --ping
 ```
+
+**Sem credencial o assistente não cai.** O token é lido na primeira chamada ao modelo, não na inicialização — então `--list`, a resolução do hotel e todo o diagnóstico determinístico continuam funcionando. A resposta vira uma mensagem padrão que explica o que falta, e o CLI avisa no stderr logo que abre. Sem token, `--list` nem avisa: não precisa de LLM para listar.
 
 **CLI.**
 
@@ -73,7 +77,6 @@ uv run pytest
 ```
 
 114 testes, nenhum toca a rede: o grafo é testado com um `FakeLLM` injetado. O marcador `integration` está registrado no `pyproject.toml` e excluído por padrão, mas **nenhum teste o usa hoje** — os testes contra o GenPlat real são manuais (`python -m assistant_hotel.llm --ping` e as execuções do CLI).
-
 **Configuração** (tudo por env var, nada hardcoded):
 
 | Variável | Default |

@@ -55,15 +55,23 @@ class Settings:
         )
 
 
+class MissingTokenError(FileNotFoundError):
+    """Token do Tompero ausente ou vazio.
+
+    Herda de FileNotFoundError para que quem ja tratava a ausencia do arquivo
+    continue funcionando sem mudanca.
+    """
+
+
 def read_requester_token(path: Path | None = None) -> str:
     """Le o token do Tompero. Nunca logar o retorno."""
     token_path = path or Settings.from_env().token_path
     if not token_path.exists():
-        raise FileNotFoundError(
+        raise MissingTokenError(
             f"Token do Tompero nao encontrado em {token_path}. "
             "Rode `tompero auth get requester-token`."
         )
     token = token_path.read_text(encoding="utf-8").strip()
     if not token:
-        raise ValueError(f"Token do Tompero em {token_path} esta vazio.")
+        raise MissingTokenError(f"Token do Tompero em {token_path} esta vazio.")
     return token

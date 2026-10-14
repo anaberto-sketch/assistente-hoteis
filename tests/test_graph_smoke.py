@@ -8,7 +8,16 @@ from __future__ import annotations
 
 from conftest import FakeLLM
 
+from assistant_hotel.config import MissingTokenError
 from assistant_hotel.graph import Deps, build_graph
+from assistant_hotel.nodes.generate import MISSING_TOKEN_STOP_REASON
+
+
+class NoTokenLLM:
+    """Simula o cliente real quando nao ha credencial do Tompero."""
+
+    def generate(self, system, messages):
+        raise MissingTokenError("Token do Tompero nao encontrado.")
 
 
 def _invoke(graph, question, hotel_id=None, history=None):
@@ -153,3 +162,37 @@ def test_resposta_truncada_e_sinalizada(repository, index):
     assert any("truncada" in flag for flag in result["guardrail_flags"])
     # Nao adianta regenerar: bateria no mesmo teto.
     assert len(llm.calls) == 1
+
+
+# --- sem credencial ---------------------------------------------------------
+
+def test_sem_credencial_devolve_resposta_padrao(repository, index):
+    """Sem token o grafo nao cai: perde a narrativa, nao o diagnostico."""
+    graph = build_graph(
+        Deps(repository=repository, index=index, llm=NoTokenLLM())
+    )
+
+    result = _invoke(graph, "como está meu hotel?", hotel_id="345798")
+
+    assert result["stop_reason"] == MISSING_TOKEN_STOP_REASON
+    assert "credencial" in result["answer"]
+    assert "tompero auth get requester-token" in result["answer"]
+
+    # O diagnostico deterministico, que nao depende de LLM, continua valido.
+    assert [lever["id"] for lever in result["diagnosis"]["levers"]] == [
+        "flag_precio_compset",
+        "campanha_compset",
+    ]
+    # E a mensagem padrao nao dispara o guardrail numerico.
+    assert result["guardrail_flags"] == []
+
+
+def test_resposta_padrao_sai_no_idioma_do_hotel(repository, index):
+    graph = build_graph(
+        Deps(repository=repository, index=index, llm=NoTokenLLM())
+    )
+
+    result = _invoke(graph, "cómo está mi hotel?", hotel_id="4038036")
+
+    assert "Ejecutá" in result["answer"]
+    assert "diagnóstico determinístico" in result["answer"]

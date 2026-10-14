@@ -11,6 +11,7 @@ import argparse
 import sys
 from typing import Any, Sequence
 
+from .config import MissingTokenError, read_requester_token
 from .data.repository import HotelRepository
 from .graph import Deps, build_deps, build_graph
 from .state import AssistantState
@@ -97,6 +98,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     graph = build_graph(deps)
     history: list[dict[str, Any]] = []
     hotel_id: str | None = None
+
+    # A credencial e preguicosa: sem ela o CLI ainda lista hoteis, resolve o
+    # hotel e roda o diagnostico. Avisamos agora para a degradacao nao
+    # surpreender so na primeira pergunta.
+    try:
+        read_requester_token()
+    except MissingTokenError as exc:
+        print(f"[aviso] {exc}", file=sys.stderr)
+        print(
+            "[aviso] O diagnóstico determinístico funciona; só a análise em "
+            "texto fica indisponível.",
+            file=sys.stderr,
+        )
 
     if args.hotel:
         hotel_id = _resolve_start_hotel(deps.repository, args.hotel)

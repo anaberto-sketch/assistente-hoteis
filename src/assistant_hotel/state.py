@@ -84,6 +84,7 @@ class AssistantState(TypedDict):
     exposed: NotRequired[dict[str, Any]]
     system_prompt: NotRequired[str]
     answer: NotRequired[str | None]
-    # Motivo de o modelo ter parado ("max_tokens" = resposta cortada).
+    # Por que a geracao parou: "max_tokens" = resposta cortada;
+    # "missing_token" = sem credencial, a resposta e a padrao.
     stop_reason: NotRequired[str | None]
     guardrail_flags: NotRequired[list[str]]
