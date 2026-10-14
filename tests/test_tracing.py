@@ -320,30 +320,6 @@ def test_traced_graph_repassa_o_config(cliente_falso):
     assert interno.chamadas == [({"question": "oi"}, config)]
 
 
-# --- a span do no -----------------------------------------------------------
-
-def test_node_span_grava_o_delta(cliente_falso):
-    from assistant_hotel.tracing import node_span
-
-    envolvido = node_span("diagnose", lambda state: {"diagnosis": {"levers": []}})
-    resultado = envolvido({"question": "oi"})
-
-    assert resultado == {"diagnosis": {"levers": []}}
-    span = cliente_falso.spans[0]
-    assert span.nome == "diagnose"
-    assert span.atualizacoes[-1]["output"] == {"diagnosis": {"levers": []}}
-
-
-def test_node_span_preserva_a_excecao(cliente_falso):
-    from assistant_hotel.tracing import node_span
-
-    def explode(state):
-        raise ValueError("no quebrado")
-
-    with pytest.raises(ValueError, match="no quebrado"):
-        node_span("ruim", explode)({})
-
-
 # --- o formato que o Langfuse espera ----------------------------------------
 
 def test_usage_details_usa_as_chaves_do_langfuse():

@@ -11,6 +11,7 @@ quebra:
   2. a credencial e aceita pelo servidor?        (chave rotacionada cai aqui)
   3. o grafo responde?
   4. o trace DESTA execucao chegou?
+  5. o que o SERVIDOR guardou de cada span       (o input chegou la?)
 
 Nenhuma chave e impressa -- so se ela existe.
 
@@ -94,6 +95,21 @@ def _chegou(cliente, desde: datetime) -> bool:
         custo = obs.total_cost
         print(f"  {obs.name} | model={obs.model} | {uso} | custo={custo}")
     print(f"  url: {cliente.get_trace_url(trace_id=novas[0].trace_id)}")
+
+    # O que o SERVIDOR guardou, nao o que mandamos. Se o input vier vazio aqui,
+    # o payload saiu certo e a ingestao perdeu -- ou seja, o problema e a versao
+    # do servidor, nao o nosso codigo.
+    print()
+    print("== 5. O que o servidor guardou ==")
+    do_trace = cliente.api.observations.get_many(
+        trace_id=novas[0].trace_id,
+        fields="io",
+        limit=50,
+    )
+    for obs in list(getattr(do_trace, "data", []) or []):
+        raiz = "RAIZ" if obs.is_root_observation else "    "
+        entrada = "None" if obs.input is None else repr(obs.input)[:70]
+        print(f"  {raiz} {obs.type:<10} {obs.name:<14} input={entrada}")
     return True
 
 

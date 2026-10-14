@@ -41,7 +41,7 @@ from .nodes.retrieve import make_retrieve_node
 from .nodes.validate import make_validate_node
 from .retrieval.index import FieldIndex, build_index
 from .state import AssistantState
-from .tracing import TracedGraph, TracedLLM, node_span
+from .tracing import TracedGraph, TracedLLM
 
 
 @dataclass(frozen=True)
@@ -54,8 +54,6 @@ class Deps:
 def build_graph(deps: Deps) -> Any:
     graph = StateGraph(AssistantState)
 
-    # Cada no ganha uma span. `node_span` e inerte sem credencial do Langfuse,
-    # entao a topologia nao muda e os testes nao precisam saber que existe.
     nos = {
         "resolve_hotel": make_resolve_node(deps.repository),
         "clarify": make_clarify_node(deps.repository),
@@ -67,7 +65,7 @@ def build_graph(deps: Deps) -> Any:
         "validate": make_validate_node(deps.llm),
     }
     for nome, no in nos.items():
-        graph.add_node(nome, node_span(nome, no))
+        graph.add_node(nome, no)
 
     graph.add_edge(START, "resolve_hotel")
     graph.add_conditional_edges(

@@ -15,11 +15,13 @@ As credenciais vem do ambiente, com os nomes que o proprio SDK le
 `LANGFUSE_HOST`). Nada de `.env` e lido por este codigo -- quem quiser um arquivo
 usa `uv run --env-file .env python ...`.
 
-A forma das spans:
+A forma das spans -- DUAS, e so:
 
     request  (raiz)   pergunta, resposta, hotel, alavancas, flags de guardrail
-      +- no           o que cada no do grafo devolveu
-      +- generation   modelo, tokens, resposta  (dentro de `generate`)
+      +- generation   modelo, tokens, resposta
+
+Os nos do grafo NAO ganham span. Eram oito por request, nao carregavam entrada
+nenhuma e o tempo deles e desprezivel ao lado do LLM -- ruido no lugar de sinal.
 
 Um rastro de observabilidade NUNCA pode custar a resposta do usuario: toda
 chamada ao Langfuse esta sob try/except, e falha dele vira no-op.
@@ -30,7 +32,7 @@ from __future__ import annotations
 import contextlib
 import os
 import sys
-from typing import Any, Callable, Iterator
+from typing import Any, Iterator
 
 # O SDK le exatamente estes nomes (langfuse/_client/environment_variables.py).
 _CHAVES = ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY")
@@ -228,23 +230,6 @@ class TracedLLM:
                 metadata={"stop_reason": completion.stop_reason},
             )
             return completion
-
-
-def node_span(name: str, fn: Callable[[Any], Any]) -> Callable[[Any], Any]:
-    """Envolve um no do grafo numa span.
-
-    Grava o DELTA que o no devolveu, nao o estado inteiro: o estado acumula o
-    system prompt e o fact sheet, e repetir isso em cada no infla o trace.
-    """
-
-    def envolvido(state: Any) -> Any:
-        with observation(name) as span:
-            resultado = fn(state)
-            span.update(output=_resumir(resultado))
-            return resultado
-
-    envolvido.__name__ = f"traced_{name}"
-    return envolvido
 
 
 class TracedGraph:
