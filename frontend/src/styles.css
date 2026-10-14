@@ -71,13 +71,16 @@ body.chat-docked .dashboard-bg {
 }
 
 /* ---- Panel del chat --------------------------------------------------- */
+/* Largura: 420px cabe o header (titulo+subtitulo + toggle + 2 icones) sem
+   quebrar a frase do subtitulo em telas de desktop. Em viewports estreitos,
+   max-width impede estourar a tela. */
 .chat-panel {
   position: fixed;
   right: 24px;
   bottom: 96px;
-  width: 380px;
+  width: 420px;
   max-width: calc(100vw - 48px);
-  height: 560px;
+  height: 600px;
   max-height: calc(100vh - 128px);
   background: #fff;
   border-radius: 16px;
@@ -120,15 +123,28 @@ body.chat-docked .dashboard-bg {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+}
+/* Bloco de texto do header: flex-item sem min-width:0 impede que o
+   text-overflow abaixo funcione (flex items tem min-width implicito = auto). */
+.chat-header-text {
+  min-width: 0;
+  flex: 1;
 }
 .chat-header .title {
   font-weight: 600;
   font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .chat-header .subtitle {
   font-size: 12px;
   opacity: 0.85;
   margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .chat-header button {
   background: transparent;
@@ -323,4 +339,71 @@ body.chat-docked .dashboard-bg {
 }
 .suggestions button:hover {
   background: #e0d7fb;
+}
+
+/* ---- Toggle de idioma ------------------------------------------------- */
+/* Dois pills PT/ES. Dois contextos de uso:
+   - "landing": inline no header claro do dashboard, ao lado do avatar.
+   - "chat":    inline no header gradiente do chat.
+   Base compartilhada: pill arredondado com dois botoes; o ativo "flutua"
+   com sombra suave para dar sensacao de slider. */
+.lang-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 3px;
+  border-radius: 999px;
+  line-height: 1;
+}
+.lang-toggle button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 5px 11px;
+  min-width: 32px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* --- Variante landing (header claro do dashboard) ----------------------- */
+/* Fundo cinza suave que casa com .db-border; estado ativo em roxo da brand,
+   com sombra para flutuar sobre o trilho. */
+.lang-toggle-landing {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+.lang-toggle-landing button {
+  color: #64748b;
+}
+.lang-toggle-landing button:hover {
+  color: #1a202c;
+}
+.lang-toggle-landing button.active {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(109, 40, 217, 0.35);
+}
+
+/* --- Variante chat (header gradiente roxo) ------------------------------ */
+/* Trilho semi-transparente para integrar com o gradiente; estado ativo em
+   branco solido para contraste maximo. */
+.lang-toggle-chat {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  margin-right: 2px;
+}
+.lang-toggle-chat button {
+  color: rgba(255, 255, 255, 0.78);
+}
+.lang-toggle-chat button:hover {
+  color: #fff;
+}
+.lang-toggle-chat button.active {
+  background: #fff;
+  color: var(--brand-dark);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }

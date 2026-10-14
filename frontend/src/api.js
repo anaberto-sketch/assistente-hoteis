@@ -8,7 +8,8 @@ export async function fetchHotels() {
 }
 
 // Stateless: el cliente reenvía `history` en cada turno, como hace el CLI.
-export async function sendChat({ question, hotelId, history }) {
+// `language` es el override del toggle; si está vacío, el backend lo deriva del país.
+export async function sendChat({ question, hotelId, history, language }) {
   const res = await fetch(`${BASE_URL}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -16,14 +17,20 @@ export async function sendChat({ question, hotelId, history }) {
       question,
       hotel_id: hotelId || null,
       history: history || [],
+      language: language || null,
     }),
   });
   if (res.status === 503) {
     // Token del LLM ausente: no es error del cliente, es indisponibilidad.
-    throw new Error(
-      "El servicio de IA no está disponible (falta la credencial del modelo)."
-    );
+    // El `code` deja que ChatWidget muestre la mensaje en el idioma activo.
+    const err = new Error("token_missing");
+    err.code = "token_missing";
+    throw err;
   }
-  if (!res.ok) throw new Error(`POST /chat falló: ${res.status}`);
+  if (!res.ok) {
+    const err = new Error(`POST /chat falló: ${res.status}`);
+    err.code = "http_error";
+    throw err;
+  }
   return res.json();
 }

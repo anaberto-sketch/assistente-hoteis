@@ -83,6 +83,10 @@
   align-items: center;
   gap: 8px;
 }
+/* Respiro entre o toggle de idioma e o avatar quando ambos coexistem. */
+.db-user .lang-toggle {
+  margin-right: 6px;
+}
 .db-avatar {
   width: 34px;
   height: 34px;

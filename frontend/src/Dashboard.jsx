@@ -1,55 +1,84 @@
 import "./Dashboard.css";
+import LanguageToggle from "./LanguageToggle";
 
-// Hardcoded demo data. No fetch, no API: all literals live here.
+// Strings do dashboard por idioma. O painel segue 100% mockado (sem fetch),
+// mas o rotulo acompanha o toggle para dar a impressao de app bilingue.
+const COPY = {
+  pt: {
+    brand: "Partner Smart Platform",
+    navToday: "Hoje",
+    navOpportunities: "Oportunidades",
+    yearFilter: "Ano atual",
+    compareLabel: "Comparar: Concorrentes",
+    download: "Baixar",
+    lastUpdated: "Última atualização:",
+    chartTabs: ["Receita total", "Diária média", "RevPAR"],
+    chartRanges: ["Dia", "Semana", "Mês"],
+    legendProperty: "Sua propriedade",
+    legendCompetitors: "Concorrentes",
+    chartAria: "Comparação de receita: sua propriedade vs concorrentes",
+    trendVsCompetitors: "vs concorrentes",
+    hotelName: "Hotel Canciller — Ex Hotel Presidente",
+    financial: [
+      { key: "revenue", label: "Receita total" },
+      { key: "adr", label: "Diária média" },
+      { key: "revpar", label: "RevPAR" },
+    ],
+    operational: [
+      { key: "bookings", label: "Reservas" },
+      { key: "nights", label: "Diárias" },
+      { key: "rateScore", label: "Pontuação de tarifa" },
+    ],
+    months: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+  },
+  es: {
+    brand: "Partner Smart Platform",
+    navToday: "Hoy",
+    navOpportunities: "Oportunidades",
+    yearFilter: "Año actual",
+    compareLabel: "Comparar: Competidores",
+    download: "Descargar",
+    lastUpdated: "Última actualización:",
+    chartTabs: ["Ingresos totales", "Tarifa diaria promedio", "RevPAR"],
+    chartRanges: ["Día", "Semana", "Mes"],
+    legendProperty: "Tu propiedad",
+    legendCompetitors: "Competidores",
+    chartAria: "Comparación de ingresos: tu propiedad vs competidores",
+    trendVsCompetitors: "vs competidores",
+    hotelName: "Hotel Canciller — Ex Hotel Presidente",
+    financial: [
+      { key: "revenue", label: "Ingresos totales" },
+      { key: "adr", label: "Tarifa diaria promedio" },
+      { key: "revpar", label: "RevPAR" },
+    ],
+    operational: [
+      { key: "bookings", label: "Reservas" },
+      { key: "nights", label: "Noches de habitación" },
+      { key: "rateScore", label: "Puntaje de tarifa" },
+    ],
+    months: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+  },
+};
+
+// Valores numericos ficam separados do idioma: nao mudam quando o toggle troca.
+const METRICS = {
+  revenue: { value: "$4,285.23", unit: "USD", trend: "-12.3%" },
+  adr: { value: "$20.45", unit: "USD", trend: "-8.1%" },
+  revpar: { value: "$0.25", unit: "USD", trend: "-15.0%" },
+  bookings: { value: "47", trend: "-5.2%" },
+  nights: { value: "66", trend: "-3.8%" },
+  rateScore: { value: "7.9", max: "/10", trend: "-0.3" },
+};
+
 const DASHBOARD_DATA = {
-  hotelName: "Hotel Canciller — Ex Hotel Presidente",
   hotelId: "HX-001",
   lastUpdated: "2025-01-15 14:32",
   user: "Juan",
-  financial: [
-    {
-      label: "Ingresos totales",
-      value: "$4,285.23",
-      unit: "USD",
-      trend: "-12.3%",
-      trendLabel: "vs competidores",
-    },
-    {
-      label: "Tarifa diaria promedio",
-      value: "$20.45",
-      unit: "USD",
-      trend: "-8.1%",
-      trendLabel: "vs competidores",
-    },
-    {
-      label: "RevPAR",
-      value: "$0.25",
-      unit: "USD",
-      trend: "-15.0%",
-      trendLabel: "vs competidores",
-    },
-  ],
-  operational: [
-    { label: "Reservas", value: "47", trend: "-5.2%", trendLabel: "vs competidores" },
-    { label: "Noches de habitación", value: "66", trend: "-3.8%", trendLabel: "vs competidores" },
-    {
-      label: "Puntaje de tarifa",
-      value: "7.9",
-      max: "/10",
-      trend: "-0.3",
-      trendLabel: "vs competidores",
-    },
-  ],
   chart: {
-    months: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
     property: [120, 150, 180, 200, 210, 230, 250, 280, 240, 200, 180, 160],
     competitors: [200, 220, 250, 280, 300, 350, 500, 520, 400, 350, 300, 250],
   },
 };
-
-// Static tabs/controls for the chart. Purely visual, no handlers.
-const CHART_TABS = ["Ingresos totales", "Tarifa diaria promedio", "RevPAR"];
-const CHART_RANGES = ["Día", "Semana", "Mes"];
 
 function HotelIcon() {
   return (
@@ -87,23 +116,23 @@ function TrendDown({ trend, trendLabel }) {
   );
 }
 
-function MetricCard({ metric }) {
+function MetricCard({ label, metric, trendLabel }) {
   return (
     <div className="metric-card">
-      <div className="metric-label">{metric.label}</div>
+      <div className="metric-label">{label}</div>
       <div className="metric-value">
         {metric.value}
         {metric.max && <span className="metric-max">{metric.max}</span>}
         {metric.unit && <span className="metric-unit">{metric.unit}</span>}
       </div>
-      <TrendDown trend={metric.trend} trendLabel={metric.trendLabel} />
+      <TrendDown trend={metric.trend} trendLabel={trendLabel} />
     </div>
   );
 }
 
 // Static SVG line chart. All geometry is computed from the hardcoded series;
 // there is no hover, tooltip or click behaviour.
-function LineChart({ chart }) {
+function LineChart({ chart, months, ariaLabel }) {
   const width = 920;
   const height = 280;
   const padding = { top: 20, right: 20, bottom: 32, left: 20 };
@@ -112,9 +141,8 @@ function LineChart({ chart }) {
 
   const allValues = [...chart.property, ...chart.competitors];
   const maxValue = Math.max(...allValues);
-  const count = chart.months.length;
+  const count = months.length;
 
-  // Map a data point to SVG coordinates.
   const xAt = (i) => padding.left + (count === 1 ? 0 : (innerW * i) / (count - 1));
   const yAt = (v) => padding.top + innerH - (innerH * v) / maxValue;
 
@@ -128,27 +156,23 @@ function LineChart({ chart }) {
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
       role="img"
-      aria-label="Comparación de ingresos: tu propiedad vs competidores"
+      aria-label={ariaLabel}
     >
-      {/* Subtle horizontal grid */}
       {gridLines.map((y, i) => (
         <line key={i} x1={padding.left} y1={y} x2={width - padding.right} y2={y} className="grid-line" />
       ))}
 
-      {/* Competitors line (teal) */}
       <polyline points={toPolyline(chart.competitors)} className="series-competitors" />
       {chart.competitors.map((v, i) => (
         <circle key={`c-${i}`} cx={xAt(i)} cy={yAt(v)} r="3.5" className="dot-competitors" />
       ))}
 
-      {/* Property line (purple) */}
       <polyline points={toPolyline(chart.property)} className="series-property" />
       {chart.property.map((v, i) => (
         <circle key={`p-${i}`} cx={xAt(i)} cy={yAt(v)} r="3.5" className="dot-property" />
       ))}
 
-      {/* X axis labels */}
-      {chart.months.map((m, i) => (
+      {months.map((m, i) => (
         <text key={m} x={xAt(i)} y={height - 8} className="axis-label" textAnchor="middle">
           {m}
         </text>
@@ -157,97 +181,114 @@ function LineChart({ chart }) {
   );
 }
 
-export default function Dashboard() {
+export default function Dashboard({ language = "es", onLanguageChange }) {
+  const t = COPY[language] || COPY.es;
   const data = DASHBOARD_DATA;
 
   return (
     <div className="dashboard">
-      {/* 1. Top bar */}
       <header className="db-header">
         <div className="db-brand">
           <span className="db-brand-icon">
             <HotelIcon />
           </span>
-          <span className="db-brand-name">Partner Smart Platform</span>
+          <span className="db-brand-name">{t.brand}</span>
         </div>
 
         <nav className="db-nav">
-          <span className="db-nav-link active">Hoy</span>
-          <span className="db-nav-link">Oportunidades</span>
+          <span className="db-nav-link active">{t.navToday}</span>
+          <span className="db-nav-link">{t.navOpportunities}</span>
         </nav>
 
         <div className="db-hotel">
-          <span className="db-hotel-name">{data.hotelName}</span>
+          <span className="db-hotel-name">{t.hotelName}</span>
           <span className="db-hotel-id">{data.hotelId}</span>
         </div>
 
         <div className="db-user">
+          {onLanguageChange && (
+            <LanguageToggle
+              value={language}
+              onChange={onLanguageChange}
+              placement="landing"
+            />
+          )}
           <span className="db-avatar">JU</span>
           <span className="db-user-name">{data.user}</span>
         </div>
       </header>
 
-      {/* 2. Filters bar */}
       <div className="db-filters">
         <div className="db-filter">
           <CalendarIcon />
-          <span>Año actual</span>
+          <span>{t.yearFilter}</span>
           <ChevronDown />
         </div>
         <div className="db-filter">
-          <span>Comparar: Competidores</span>
+          <span>{t.compareLabel}</span>
           <ChevronDown />
         </div>
-        <span className="db-download">Descargar</span>
+        <span className="db-download">{t.download}</span>
       </div>
 
-      {/* Main content container */}
       <div className="db-container">
-        {/* 3. Financial performance */}
-        <div className="db-updated">Última actualización: {data.lastUpdated}</div>
+        <div className="db-updated">
+          {t.lastUpdated} {data.lastUpdated}
+        </div>
         <section className="db-cards">
-          {data.financial.map((m) => (
-            <MetricCard key={m.label} metric={m} />
+          {t.financial.map((f) => (
+            <MetricCard
+              key={f.key}
+              label={f.label}
+              metric={METRICS[f.key]}
+              trendLabel={t.trendVsCompetitors}
+            />
           ))}
         </section>
 
-        {/* 4. Line chart */}
         <section className="db-chart-card">
           <div className="db-chart-head">
             <div className="db-chart-tabs">
-              {CHART_TABS.map((t, i) => (
-                <span key={t} className={`chart-tab ${i === 0 ? "active" : ""}`}>
-                  {t}
+              {t.chartTabs.map((tab, i) => (
+                <span key={tab} className={`chart-tab ${i === 0 ? "active" : ""}`}>
+                  {tab}
                 </span>
               ))}
             </div>
             <div className="db-chart-ranges">
-              {CHART_RANGES.map((r, i) => (
-                <span key={r} className={`chart-range ${i === CHART_RANGES.length - 1 ? "active" : ""}`}>
+              {t.chartRanges.map((r, i) => (
+                <span
+                  key={r}
+                  className={`chart-range ${i === t.chartRanges.length - 1 ? "active" : ""}`}
+                >
                   {r}
                 </span>
               ))}
             </div>
           </div>
 
-          <LineChart chart={data.chart} />
+          <LineChart chart={data.chart} months={t.months} ariaLabel={t.chartAria} />
 
           <div className="db-legend">
             <span className="legend-item">
               <span className="legend-dot dot-prop" />
-              Tu propiedad
+              {t.legendProperty}
             </span>
             <span className="legend-item">
               <span className="legend-dot dot-comp" />
-              Competidores
+              {t.legendCompetitors}
             </span>
           </div>
         </section>
 
-        {/* 5. Operational metrics */}
         <section className="db-cards">
-          {data.operational.map((m) => (
-            <MetricCard key={m.label} metric={m} />
+          {t.operational.map((o) => (
+            <MetricCard
+              key={o.key}
+              label={o.label}
+              metric={METRICS[o.key]}
+              trendLabel={t.trendVsCompetitors}
+            />
           ))}
         </section>
       </div>
