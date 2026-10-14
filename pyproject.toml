@@ -12,10 +12,14 @@ dependencies = [
     "uvicorn>=0.30",
     "pydantic>=2.0",
     "pyyaml>=6.0",
+    "langfuse>=5.0.1",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+# O pipeline de eval (evals/) e ferramenta de desenvolvimento: nao entra no
+# `uv sync` normal. Instale com `uv sync --extra eval`.
+eval = ["deepeval>=2.0"]
 
 [build-system]
 requires = ["hatchling"]

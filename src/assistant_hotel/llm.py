@@ -30,10 +30,30 @@ class Completion:
 
     text: str
     stop_reason: str | None = None
+    # Uso vem do provedor e pode faltar (o FakeLLM dos testes nao preenche).
+    # Por isso os defaults sao None, e nao 0: "nao sei" e diferente de "zero".
+    input_tokens: int | None = None
+    output_tokens: int | None = None
 
     @property
     def truncated(self) -> bool:
         return self.stop_reason == "max_tokens"
+
+    def usage_details(self) -> dict[str, int]:
+        """Uso no formato que o Langfuse espera: `input`/`output`/`total`.
+
+        Nao e o nome do SDK anthropic (`input_tokens`/`output_tokens`) de
+        proposito -- verificado em langfuse/openai.py, que monta
+        `{"input": usage_dict["prompt_tokens"]}`.
+
+        Devolve vazio quando o provedor nao informou uso: melhor sem custo do
+        que com custo inventado.
+        """
+        if self.input_tokens is None and self.output_tokens is None:
+            return {}
+        entrada = self.input_tokens or 0
+        saida = self.output_tokens or 0
+        return {"input": entrada, "output": saida, "total": entrada + saida}
 
 
 class LLMClient(Protocol):
@@ -53,6 +73,11 @@ class GenPlatLLM:
     def __init__(self, settings: Settings | None = None) -> None:
         self._settings = settings or Settings.from_env()
         self._client: Any = None
+
+    @property
+    def model(self) -> str:
+        """Nome do modelo, para a span de geracao do Langfuse."""
+        return self._settings.model
 
     def _connect(self) -> Any:
         if self._client is None:
@@ -79,7 +104,13 @@ class GenPlatLLM:
         text = "".join(
             block.text for block in response.content if getattr(block, "type", "") == "text"
         ).strip()
-        return Completion(text=text, stop_reason=getattr(response, "stop_reason", None))
+        usage = getattr(response, "usage", None)
+        return Completion(
+            text=text,
+            stop_reason=getattr(response, "stop_reason", None),
+            input_tokens=getattr(usage, "input_tokens", None),
+            output_tokens=getattr(usage, "output_tokens", None),
+        )
 
 
 def _ping() -> int:
